@@ -1,10 +1,18 @@
-import {formatMoney} from "util-formatters.js";
+import {formatMoney} from "./util-formatters.js";
 
 /** @param {NS} ns **/
 export async function main(ns) {
+	if (ns.args.length < 2) {
+		ns.tprint(`Usage: run ${ns.getScriptName()} [mem] [hostname1] ([...other-hostnames])`);
+		return;
+	}
+
+
 	let [mem, ...names] = ns.args;
 	let moneyAvailable = ns.getServerMoneyAvailable('home');
 	let nOfServers = names.length;
+
+
 
 	if (mem === 'max') {
 		mem = ns.getPurchasedServerMaxRam();

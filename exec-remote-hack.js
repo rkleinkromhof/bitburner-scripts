@@ -1,0 +1,90 @@
+import {scanServers} from './util-servers.js';
+
+/**
+ * @param {NS} ns
+ **/
+export async function main(ns) {
+	if (ns.args.length < 1 || ns.args[0] === 'help') {
+		ns.tprint(`Usage: ${ns.getScriptName()} [numThreads] [host] [...targets]`);
+		return;
+	}
+	ns.disableLog('getServerMaxRam');
+	ns.disableLog('getServerUsedRam');
+	ns.disableLog('getScriptRam');
+	ns.disableLog('getServerMaxMoney');
+
+	let script = 'hack-v3.js';
+	let [numThreads, host, ...targets] = ns.args;
+
+	if (!ns.fileExists(script, host)) {
+		ns.tprint(`Copying ${script} to ${host}`);
+		await ns.scp(script, host);
+	}
+
+	if (targets[0] === 'available') {
+		targets = scanServers(ns, 4, 1000, 'hackable')
+		.filter(server => !ns.isRunning(script, host, server.hostname))
+		.map(server => server.hostname);
+	}
+
+	if (targets.length === 0) {
+		ns.tprint(`No targets found.`);
+
+		return;
+	}
+
+	let originalTargets = Array.prototype.slice.call(targets);
+	targets = targets.filter(target => ns.serverExists(target));
+
+	if (targets.length < originalTargets.length) {
+		ns.tprint(`Skipping targets that could not be found: ${originalTargets.filter(target => !targets.includes(target)).join(', ')}`);
+	}
+
+	let availableRam = ns.getServerMaxRam(host) - ns.getServerUsedRam(host);
+	let reqRamPerThread = ns.getScriptRam(script, host);
+	let maxThreads = Math.floor(availableRam / reqRamPerThread);
+	let minMoneyThresh = 1000; // Minimum of $1000 or bail.
+	let successfullyStarted = [];
+	let failedToStart = [];
+
+	numThreads = Math.max(1, numThreads); // If somehow the numThreads is lower than 1, default to 1;
+
+	let totalThreads = numThreads * targets.length;
+
+	if (totalThreads > maxThreads) {
+		ns.tprint(`There isn't enough RAM available on ${host} to start ${numThreads} thread(s) of ${script} for ${targets.length} targets. (max = ${maxThreads}, needed = ${totalThreads})`);
+
+		return;
+	}	
+
+	for (let i = 0; i < targets.length; i++) {
+		let target = targets[i];
+		let maxMoney = ns.getServerMaxMoney(target);
+
+		if (maxMoney < minMoneyThresh) {
+			ns.tprint(`Server ${target} can only hold \$${maxMoney}. We require at least \$${minMoneyThresh} to make this worthwile.`);
+		}
+		
+		ns.tprint(`Starting ${script} on ${host} targeting ${target} with ${numThreads} threads.`);
+		let pid = ns.exec(script, host, numThreads, target);
+
+		if (pid > 0) {
+			successfullyStarted.push(target);
+		} else {
+			failedToStart.push(target);
+		}
+	}
+
+	await ns.sleep(1000);
+
+	if (successfullyStarted.length) {
+			let ramUsed = ns.getServerUsedRam(host);
+			let formattedRamAvailable = Math.round(((ramUsed) + Number.EPSILON) * 100) / 100;
+			let ramUsedPercent = Math.round(((100 / ns.getServerMaxRam(host) * ramUsed) + Number.EPSILON) * 100) / 100;
+
+		ns.tprint(`Successfully started ${failedToStart.length ? '': 'all '}${successfullyStarted.length} instances. RAM left: ${formattedRamAvailable}/${ns.getServerMaxRam(host)}GB (${ramUsedPercent}%)`);
+	}
+	if (failedToStart.length) {
+		ns.tprint(`${failedToStart.length} instances failed to start: ${failedToStart.join(', ')}`);
+	}
+}

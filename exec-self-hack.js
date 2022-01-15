@@ -15,8 +15,6 @@ export async function main(ns) {
 	let maxThreads = Math.floor(availableRam / reqRamPerThread);
 	let minMoneyThresh = 1000; // Minimum of $1000 or bail.
 	let maxMoney = ns.getServerMaxMoney(target);
-	let args = [];
-	let numThreadsIsMax = false;
 
 	if (!ns.fileExists(script, target)) {
 		ns.tprint(`File ${script} does not exists on ${target}.`);
@@ -29,7 +27,6 @@ export async function main(ns) {
 
 	// If we should use the max number of threads, then calculate what that is.
 	if (numThreads === 'max') {
-		numThreadsIsMax = true;
 		numThreads = maxThreads;
 	}
 
@@ -41,6 +38,4 @@ export async function main(ns) {
 		ns.tprint(`Starting ${script} on ${target} with ${numThreads} threads`);
 		ns.exec(script, target, numThreads, target);
 	}
-	
-	// ns.tprint(`${target} has ${availableRam}/${ns.getServerMaxRam(target)}GB RAM available, which can be used to start ${maxThreads} threads of ${script} (requires ${reqRamPerThread}GB per thread)`);
 }

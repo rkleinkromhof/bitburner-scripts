@@ -1,4 +1,4 @@
-import {formatMagnitude} from "util-formatters.js";
+import {formatMagnitude} from "./util-formatters.js";
 
 /** @param {NS} ns **/
 export async function main(ns) {
@@ -22,6 +22,6 @@ export async function main(ns) {
 		let nOfServersCanBuy = Math.floor(moneyAvailable / costPerServer);
 		i++;
 
-		ns.tprint(`(${padLeft(i, 2)}) ${nOfServers} server${nOfServers === 1 ? '' : 's'} with ${padLeft(mem, 7)}GB for \$${padLeft(formatMagnitude(costPerServer, 'm'), 9)} per server = \$${padLeft(formatMagnitude(nOfServers * costPerServer, 'm'), 9)}. Can buy ${padLeft(Math.floor(nOfServersCanBuy), 6)} servers for \$${padLeft(formatMagnitude(nOfServersCanBuy * costPerServer, 'm'), 9)}`);
+		ns.tprint(`(${padLeft(i, 2)}) ${nOfServers} server${nOfServers === 1 ? '' : 's'} with ${padLeft(mem, 7)}GB for \$${padLeft(formatMagnitude(costPerServer, 'm'), 9)} per server = \$${padLeft(formatMagnitude(nOfServers * costPerServer, 'm'), 9)}. Can buy ${padLeft(Math.floor(nOfServersCanBuy), 8)} servers for \$${padLeft(formatMagnitude(nOfServersCanBuy * costPerServer, 'm'), 9)}`);
 	}
 }

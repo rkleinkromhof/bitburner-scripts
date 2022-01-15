@@ -1,4 +1,4 @@
-import {formatMoney} from "util-formatters.js";
+import {formatMoney} from "./util-formatters.js";
 
 /**
  * @param {NS} ns namespace
