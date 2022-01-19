@@ -1,4 +1,5 @@
 import {scanServers} from './util-servers.js';
+import {formatMagnitude} from './util-formatters.js';
 
 /**
  * @param {NS} ns Namespace
@@ -6,8 +7,8 @@ import {scanServers} from './util-servers.js';
 export async function main(ns) {
 	// Shortcut for usage logging.
 	if (ns.args[0] === 'help') {
-		ns.tprint(`Usage: ${ns.getScriptName()} [minimum max RAM] [minimum max money] ([...options])`);
-		ns.tprint(` => available options: hacked, unhacked, hackable`);
+		ns.tprint(`Usage: ${ns.getScriptName()} ([minimum max RAM]) ([minimum max money]) ([...options])`);
+		ns.tprint(` => available options: ${getScanServerOptions().join(', ')}`);
 		return;
 	}
 
@@ -24,10 +25,10 @@ export async function main(ns) {
 	if (serversLeft.length) {
 		serversLeft.forEach((server, index) => {
 			let ramAvailable = server.maxRam - server.ramUsed;
-			let formattedRamAvailable = Math.round(((ramAvailable) + Number.EPSILON) * 100) / 100;
-			let ramUsedPercent = Math.round(((100 / server.maxRam * ramAvailable) + Number.EPSILON) * 100) / 100;
+			let formattedRamAvailable = ramAvailable ? Math.round(((ramAvailable) + Number.EPSILON) * 100) / 100 : "0";
+			let ramUsedPercent = ramAvailable ? Math.round(((100 / server.maxRam * ramAvailable) + Number.EPSILON) * 100) / 100 : "0";
 
-			ns.tprint(`(${String.prototype.padStart.call(index + 1, 2, '0')}) ${server.hostname} - Hack: ${server.requiredHackingSkill}, Req. open ports: ${server.numOpenPortsRequired}, RAM: ${formattedRamAvailable}/${server.maxRam}GB (${ramUsedPercent}%)${(!optionHacked && server.hasAdminRights) ? ' [ACCESS]' : ''}`)
+			ns.tprint(`(${String.prototype.padStart.call(index + 1, 2, '0')}) ${server.hostname} - Hack: ${server.requiredHackingSkill}, Req. open ports: ${server.numOpenPortsRequired}, RAM: ${formattedRamAvailable}/${server.maxRam}GB (${ramUsedPercent}%), Money: \$${formatMagnitude(server.moneyAvailable, 'm')}/${formatMagnitude(server.moneyMax, 'm')}${(!optionHacked && server.hasAdminRights) ? ' [ACCESS]' : ''}`)
 		});
 	} else {
 		ns.tprint(`No servers found.`);

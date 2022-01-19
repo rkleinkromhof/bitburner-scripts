@@ -22,6 +22,6 @@ export async function main(ns) {
 		let nOfServersCanBuy = Math.floor(moneyAvailable / costPerServer);
 		i++;
 
-		ns.tprint(`(${padLeft(i, 2)}) ${nOfServers} server${nOfServers === 1 ? '' : 's'} with ${padLeft(mem, 7)}GB for \$${padLeft(formatMagnitude(costPerServer, 'm'), 9)} per server = \$${padLeft(formatMagnitude(nOfServers * costPerServer, 'm'), 9)}. Can buy ${padLeft(Math.floor(nOfServersCanBuy), 8)} servers for \$${padLeft(formatMagnitude(nOfServersCanBuy * costPerServer, 'm'), 9)}`);
+		ns.tprint(`(${padLeft(i, 2)}) ${nOfServers} server${nOfServers === 1 ? '' : 's'} with ${padLeft(mem, 7)}GB for \$${padLeft(formatMagnitude(costPerServer, 'm'), 11)} per server = \$${padLeft(formatMagnitude(nOfServers * costPerServer, 'm'), 11)}. Can buy ${padLeft(Math.floor(nOfServersCanBuy), 10)} servers for \$${padLeft(formatMagnitude(nOfServersCanBuy * costPerServer, 'm'), 9)}`);
 	}
 }

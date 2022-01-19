@@ -9,17 +9,19 @@ export async function main(ns) {
 
 	let script = 'hack-v3.js';
 	let target = ns.args[0];
+
+	// Copy the script file if it doesn't exist.
+	if (!ns.fileExists(script, target)) {
+		ns.tprint(`Copying ${script} to ${target}`);
+		await ns.scp(script, target);
+	}
+
 	let numThreads = ns.args[1];
 	let availableRam = ns.getServerMaxRam(target) - ns.getServerUsedRam(target);
 	let reqRamPerThread = ns.getScriptRam(script, target);
 	let maxThreads = Math.floor(availableRam / reqRamPerThread);
 	let minMoneyThresh = 1000; // Minimum of $1000 or bail.
 	let maxMoney = ns.getServerMaxMoney(target);
-
-	if (!ns.fileExists(script, target)) {
-		ns.tprint(`File ${script} does not exists on ${target}.`);
-		return;
-	}
 
 	if (maxMoney < minMoneyThresh) {
 		ns.tprint(`Server ${target} can only hold \$${maxMoney}. We require at least \$${minMoneyThresh} to make this worthwile.`);

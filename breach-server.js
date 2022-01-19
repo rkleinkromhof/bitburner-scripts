@@ -1,48 +1,45 @@
+import { breachServer, getScanServerOptions, scanServers } from './util-servers.js';
+
 /** @param {NS} ns **/
 export async function main(ns) {
-	let scriptUrl = 'https://raw.githubusercontent.com/rkleinkromhof/bitburner-scripts/main/hack-v3.js';
-	let targetFilename = 'hack-v3.js';
-	let target = ns.args[0];
-
-	if (!ns.serverExists(target)) {
-		ns.tprint(`Server not found: ${target}`);
-
+	// Shortcut for usage logging.
+	if (ns.args.length === 0 || ns.args[0] === 'help') {
+		ns.tprint(`Usage: ${ns.getScriptName()} ([...targets])`);
 		return;
 	}
 
-	if (ns.fileExists('BruteSSH.exe', 'home')) {
-		ns.tprint(`Opening SSH port on ${target}`);
-		ns.brutessh(target);
+	let targets = Array.prototype.slice.call(ns.args);
+	let availableOptions = getScanServerOptions();
+	let allOptions = Array.prototype.every.call(targets, target => availableOptions.indexOf(target) >= 0);
+
+	if (allOptions) {
+		targets = scanServers(ns, 0, 0, ...targets)
+			.map(server => server.hostname);
+	}
+
+	if (targets.length === 0) {
+		ns.tprint(`No targets found.`);
+	}
+	else {
+		for (let i = 0; i < targets.length; i++) {			
+			await doBreach(ns, targets[i]);
+		}
+		
 	}
 	
-	if (ns.fileExists('FTPCrack.exe', 'home')) {
-		ns.tprint(`Opening FTP port on ${target}`);
-		ns.ftpcrack(target);
-	}
+	return Promise.resolve(true);
+}
 
-	if (ns.fileExists('relaySMTP.exe', 'home')) {
-		ns.tprint(`Opening SMTP port on ${target}`);
-		ns.relaysmtp(target);
-	}
+async function doBreach(ns, target) {
+	if (ns.serverExists(target)) {
+		ns.tprint(`Breaching ${target}`);
+		breachServer(ns, target);
 
-	if (ns.fileExists('HTTPWorm.exe', 'home')) {
-		ns.tprint(`Opening HTTP port on ${target}`);
-		ns.httpworm(target);
-	}
+		await ns.sleep(200);
 
-	if (ns.fileExists('SQLInject.exe', 'home')) {
-		ns.tprint(`Opening SQL port on ${target}`);
-		ns.sqlinject(target);
+		return Promise.resolve(true); // Ok.
+	} else {
+		ns.tprint(`Server ${target} does not exists.`);
 	}
-
-	if (!ns.hasRootAccess(target)) {
-		ns.tprint(`Gaining root access to ${target}`);
-		ns.nuke(target);
-	}
-
-	if (!ns.fileExists(targetFilename, target)) {
-		ns.tprint(`Copying ${targetFilename} to ${target}`);
-		return await ns.wget(scriptUrl, targetFilename, target);
-	}
-	return Promise.resolve(true); // File exists, so resolve (true);
+	return Promise.reject(false); // Failed :'(
 }

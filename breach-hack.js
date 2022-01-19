@@ -6,12 +6,12 @@ import {scanServers} from './util-servers.js';
  **/
 export async function main(ns) {
 	// Shortcut for usage logging.
-	if (ns.args[0] === 'help') {
+	if (ns.args.length === 0 || ns.args[0] === 'help') {
 		ns.tprint(`Usage: ${ns.getScriptName()} ([...targets])`);
 		return;
 	}
 
-	let targets = ns.args;
+	let targets = Array.prototype.slice.call(ns.args);
 	let hackScript = 'hack-v3.js';
 
 	if (targets[0] === 'available') {
@@ -22,8 +22,9 @@ export async function main(ns) {
 
 	if (targets.length === 0) {
 		ns.tprint(`No targets found.`);
-	} else {
-		for(let i = 0; i < targets.length; i++) {
+	}
+	else {
+		for (let i = 0; i < targets.length; i++) {
 			await doBreachAndHack(ns, targets[i]);
 		}
 	}
@@ -43,10 +44,11 @@ async function doBreachAndHack(ns, target) {
 	if (ns.serverExists(target)) {
 		if (ns.exec(breachScript, home, 1, target)) {
 			ns.tprint(`Breaching ${target}`);
-			await ns.sleep(1000);
 			
 			if (ns.exec(execHackScript, home, 1, target, 'max')) {
+				await ns.sleep(1000);
 				ns.tprint(`${target} hacked successfully.`);
+				
 				return Promise.resolve(true); // Yaaay, success!
 			} else {
 				ns.tprint(`${execHackScript} failed on ${target}.`);

@@ -15,16 +15,27 @@ export async function main(ns) {
 
 	let script = 'hack-v3.js';
 	let [numThreads, host, ...targets] = ns.args;
+	let reverse = false;
 
 	if (!ns.fileExists(script, host)) {
 		ns.tprint(`Copying ${script} to ${host}`);
 		await ns.scp(script, host);
+		await ns.sleep(500); // Wait a short time more to make sure the script is well in place or calculation might go wrong.
+	}
+
+	if (targets[targets.length - 1] === 'reverse') {
+		targets.pop();
+		reverse = true;
 	}
 
 	if (targets[0] === 'available') {
-		targets = scanServers(ns, 4, 1000, 'hackable')
-		.filter(server => !ns.isRunning(script, host, server.hostname))
-		.map(server => server.hostname);
+		targets = scanServers(ns, 0, 1000, 'hackable') // 0GB RAM, because we're host's RAM, not target's.
+			.filter(server => !ns.isRunning(script, host, server.hostname))
+			.map(server => server.hostname);
+	}
+
+	if (reverse) {
+		targets.reverse();
 	}
 
 	if (targets.length === 0) {
@@ -46,10 +57,15 @@ export async function main(ns) {
 	let minMoneyThresh = 1000; // Minimum of $1000 or bail.
 	let successfullyStarted = [];
 	let failedToStart = [];
+	let totalThreads;
 
-	numThreads = Math.max(1, numThreads); // If somehow the numThreads is lower than 1, default to 1;
-
-	let totalThreads = numThreads * targets.length;
+	if (numThreads === 'max') {
+		numThreads = Math.floor(maxThreads / targets.length);
+		totalThreads = numThreads * targets.length;
+	} else {
+		numThreads = Math.max(1, numThreads); // If somehow the numThreads is lower than 1, default to 1;
+		totalThreads = numThreads * targets.length;
+	}
 
 	if (totalThreads > maxThreads) {
 		ns.tprint(`There isn't enough RAM available on ${host} to start ${numThreads} thread(s) of ${script} for ${targets.length} targets. (max = ${maxThreads}, needed = ${totalThreads})`);
@@ -82,7 +98,7 @@ export async function main(ns) {
 			let formattedRamAvailable = Math.round(((ramUsed) + Number.EPSILON) * 100) / 100;
 			let ramUsedPercent = Math.round(((100 / ns.getServerMaxRam(host) * ramUsed) + Number.EPSILON) * 100) / 100;
 
-		ns.tprint(`Successfully started ${failedToStart.length ? '': 'all '}${successfullyStarted.length} instances. RAM left: ${formattedRamAvailable}/${ns.getServerMaxRam(host)}GB (${ramUsedPercent}%)`);
+		ns.tprint(`Successfully started ${failedToStart.length ? '': 'all '}${successfullyStarted.length} instances. RAM left: ${formattedRamAvailable}/${ns.getServerMaxRam(host)}GB (~${ramUsedPercent}%)`);
 	}
 	if (failedToStart.length) {
 		ns.tprint(`${failedToStart.length} instances failed to start: ${failedToStart.join(', ')}`);

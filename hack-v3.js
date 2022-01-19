@@ -5,6 +5,12 @@
  * @param {NS} ns namespace
  **/
 export async function main(ns) {
+	// Shortcut for usage logging.
+	if (ns.args.length < 1 || ns.args[0] === 'help') {
+		ns.tprint(`Usage: ${ns.getScriptName()} [target]`);
+		return;
+	}
+
 	let version = 3.1;
 	let target = ns.args[0];
 	let minMoneyThresh = 1000; // Minimum of $1000 or bail.

@@ -1,4 +1,35 @@
 /**
+ * Breaches the given server(s).
+ * @param {NS} ns Namespace
+ **/
+export function breachServer(ns, target) {
+	if (ns.fileExists('BruteSSH.exe', 'home')) {
+		ns.brutessh(target);
+	}
+	
+	if (ns.fileExists('FTPCrack.exe', 'home')) {
+		ns.ftpcrack(target);
+	}
+
+	if (ns.fileExists('relaySMTP.exe', 'home')) {
+		ns.relaysmtp(target);
+	}
+
+	if (ns.fileExists('HTTPWorm.exe', 'home')) {
+		ns.httpworm(target);
+	}
+
+	if (ns.fileExists('SQLInject.exe', 'home')) {
+		ns.sqlinject(target);
+	}
+
+	if (!ns.hasRootAccess(target)) {
+		ns.nuke(target);
+	}
+	
+}
+
+/**
  * Scans for servers matching the given conditions.
  * @param {NS} ns Namespace
  * @param {number} serverMinMaxRam // Minimum of max RAM on a server. Default to 4GB.
@@ -14,12 +45,18 @@ export function scanServers(ns, serverMinMaxRam, serverMinMaxMoney, ...options) 
 	let optionHacked = contains(options, 'hacked');
 	let optionUnhacked = contains(options, 'unhacked');
 	let optionHackable = contains(options, 'hackable');
+	let optionNoAvailableMoney = contains(options, 'nomoney');
+	let optionNoMaxMoney = contains(options, 'nomaxmoney');
+	let optionNoRam = contains(options, 'noram');
+
+	ns.tprint(`Scanning for servers with options: ${options.join(', ')}`);
 
 	return servers
 		.map(server => ns.getServer(server))
 		.filter(server => server.numOpenPortsRequired <= openablePorts)
-		.filter(server => server.maxRam >= serverMinMaxRam)
-		.filter(server => server.moneyMax >= serverMinMaxMoney)
+		.filter(server => optionNoRam ? server.maxRam === 0 : server.maxRam >= serverMinMaxRam)
+		.filter(server => !optionNoAvailableMoney || server.moneyAvailable === 0)
+		.filter(server => optionNoMaxMoney ? server.moneyMax === 0 : server.moneyMax >= serverMinMaxMoney)
 		.filter(server => !optionHacked || server.hasAdminRights)
 		.filter(server => !optionUnhacked || !server.hasAdminRights)
 		.filter(server => !optionHackable || server.requiredHackingSkill <= hackingSkill)
@@ -72,6 +109,14 @@ export function deepScan(ns, hostname) {
 	}
 
 	return serversSeen.slice(1); // Remove hostname from the list.
+}
+
+/**
+ * Get all options available for scanning servers.
+ * @return {String[]} options
+ */
+export function getScanServerOptions() {
+	return ['hacked', 'unhacked', 'hackable', 'noram', 'nomoney', 'nomaxmoney'];
 }
 
 function contains(arr, value) {

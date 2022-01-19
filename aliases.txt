@@ -1,0 +1,6 @@
+alias hack-from-home=run exec-remote-hack.js max home available
+alias backdoor-nitesec=home; connect hong-fang-tea; connect max-hardware; connect phantasy; connect avmnite-02h; backdoor
+alias backdoor-csec=home; connect n00dles; connect CSEC; backdoor
+alias restart-hack-from-home=killall;run exec-remote-hack.js max home available
+alias rebuy=buy BruteSSH.exe; buy FTPCrack.exe; buy relaySMTP.exe; buy HTTPWorm.exe; buy SQLInject.exe; buy ServerProfiler.exe; buy DeepscanV1.exe; buy DeepscanV2.exe; buy AutoLink.exe
+alias backdoor-the-black-hand=home; connect n00dles; connect CSEC; connect neo-net; connect comptek; connect I.I.I.I; backdoor
