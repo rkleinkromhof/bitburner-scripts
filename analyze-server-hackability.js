@@ -4,6 +4,12 @@ import {formatMoney} from "./util-formatters.js";
  * @param {NS} ns namespace
  **/
 export async function main(ns) {
+	// Shortcut for usage logging.
+	if (ns.args.length < 1 || ns.args[0] === 'help') {
+		ns.tprint(`Usage: ${ns.getScriptName()} [target]`);
+		return;
+	}
+
 	let script = 'hack-v3.js';
 	let target = ns.args[0];
 

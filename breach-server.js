@@ -7,9 +7,14 @@ export async function main(ns) {
 		ns.tprint(`Usage: ${ns.getScriptName()} ([...targets])`);
 		return;
 	}
-
+	
 	let targets = Array.prototype.slice.call(ns.args);
 	let availableOptions = getScanServerOptions();
+
+	if (targets[0] === 'available') {
+		targets = ['hackable'];
+	}
+
 	let allOptions = Array.prototype.every.call(targets, target => availableOptions.indexOf(target) >= 0);
 
 	if (allOptions) {
@@ -41,5 +46,5 @@ async function doBreach(ns, target) {
 	} else {
 		ns.tprint(`Server ${target} does not exists.`);
 	}
-	return Promise.reject(false); // Failed :'(
+	return Promise.resolve(false); // Failed :'(
 }

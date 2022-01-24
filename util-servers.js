@@ -49,7 +49,7 @@ export function scanServers(ns, serverMinMaxRam, serverMinMaxMoney, ...options) 
 	let optionNoMaxMoney = contains(options, 'nomaxmoney');
 	let optionNoRam = contains(options, 'noram');
 
-	ns.tprint(`Scanning for servers with options: ${options.join(', ')}`);
+	//ns.tprint(`Scanning for servers with options: ${options.join(', ')}`);
 
 	return servers
 		.map(server => ns.getServer(server))
@@ -109,6 +109,35 @@ export function deepScan(ns, hostname) {
 	}
 
 	return serversSeen.slice(1); // Remove hostname from the list.
+}
+
+/**
+ * Finds a node somewhere in the network of nodes.
+ * 
+ * @param {NS} ns Namespace
+ * @param {string} parent The parent server name (yes, this 'network' is a tree)
+ * @param {string} hostname The host server name
+ * @param {string} target The target server name
+ * @returns {Promise<String[]>} path of servers to get from the root to the target.
+ */
+export function findNode(ns, parent, hostname, target) {
+	// Shortcut if we've already found our target.
+	if (hostname === target) {
+		return [target];
+	}	
+
+	let nodes = ns.scan(hostname)
+		.filter(server => server !== parent) // Servers can also connect to their parent, but we don't want to get stuck in an infinite loop, so, yeah, remove that.
+		.filter(server => !ns.getServer(server).purchasedByPlayer);// Ignore our own servers.
+
+	let foundNode = [];
+	let node;
+
+	while (!foundNode.length && nodes.length && (node = nodes.shift())) {
+		foundNode = findNode(ns, hostname, node, target);
+	}
+	
+	return (foundNode && foundNode.length) ? [hostname].concat(...foundNode) : [];
 }
 
 /**

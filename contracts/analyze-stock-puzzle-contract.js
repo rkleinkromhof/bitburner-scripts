@@ -1,6 +1,11 @@
 /** @param {NS} ns **/
 export async function main(ns) {
-	let stockPrices = [154, 18, 122, 8, 29, 163, 162, 66, 103, 166, 144, 59, 200, 119, 104, 23, 165, 40, 142, 169, 179, 41, 184, 100, 34, 129, 99, 27, 104, 65, 192, 84, 91, 58, 46, 51];
+	let [maxLookAhead, stockPrices] = [...ns.args];
+
+	if (ns.args.length === 2) {
+		stockPrices = stockPrices.split(',').map(price => Number.parseInt(price));
+	}
+
 	let diffs = [];
 	let price = stockPrices[0];
 	let previousPrice;
@@ -18,9 +23,9 @@ export async function main(ns) {
 	// let lastHigh = Number.MIN_SAFE_INTEGER;
 	let boughtStockPrice = false;
 	let profit = 0;
-	let maxLookAhead = ns.args[0] || 2;
+	// let maxLookAhead = ns.args[0] || 2;
 	let transactions = [];
-	
+
 
 	for (let i = 0; i < stockPrices.length; i++) {
 		let lastItem = i === stockPrices.length - 1;

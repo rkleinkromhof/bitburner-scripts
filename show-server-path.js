@@ -1,4 +1,4 @@
-import {scanServers} from './util-servers.js';
+import {scanServers, findNode} from './util-servers.js';
 
 /**
  * @param {NS} ns Namespace
@@ -30,40 +30,11 @@ export async function main(ns) {
 			let path = findNode(ns, null, ns.getHostname(), target);
 
 			if (path.length) {
+				path.shift(); // Remove 'home' from the path. We know.
+
 				ns.tprint(`${target} found at: ${path.join(' -> ')}`);
+				ns.tprint(`Command: home; connect ${path.join('; connect ')}`);
 			}
 		}
 	}
-}
-
-/**
- * Finds a node somewhere in the network of nodes.
- * 
- * @param {NS} ns Namespace
- * @param {string} parent The parent server name (yes, this 'network' is a tree)
- * @param {string} hostname The host server name
- * @param {string} target The target server name
- * @returns {Promise<String[]>} path of servers to get from the root to the target.
- */
-function findNode(ns, parent, hostname, target) {
-	// Shortcut if we've already found our target.
-	if (hostname === target) {
-		return [target];
-	}	
-
-	let nodes = ns.scan(hostname)
-		.filter(server => server !== parent) // Servers can also connect to their parent, but we don't want to get stuck in an infinite loop, so, yeah, remove that.
-		.filter(server => !ns.getServer(server).purchasedByPlayer);// Ignore our own servers.
-
-	let foundNode = [];
-	let node;
-	let iterations = 0;
-	let maxIterations = 50; // Safety catch for not getting stuck in loops. I should remove this once I am confident this won't fuck itself up.
-
-	while (!foundNode.length && nodes.length && (node = nodes.shift()) && iterations <= maxIterations) {
-		iterations++;
-		foundNode = findNode(ns, hostname, node, target);
-	}
-	
-	return (foundNode && foundNode.length) ? [hostname].concat(...foundNode) : [];
 }

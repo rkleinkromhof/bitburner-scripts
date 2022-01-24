@@ -60,7 +60,7 @@ export async function main(ns) {
 	let totalThreads;
 
 	if (numThreads === 'max') {
-		numThreads = Math.floor(maxThreads / targets.length);
+		numThreads = Math.max(Math.floor(maxThreads / targets.length), 1);
 		totalThreads = numThreads * targets.length;
 	} else {
 		numThreads = Math.max(1, numThreads); // If somehow the numThreads is lower than 1, default to 1;
@@ -95,10 +95,10 @@ export async function main(ns) {
 
 	if (successfullyStarted.length) {
 			let ramUsed = ns.getServerUsedRam(host);
-			let formattedRamAvailable = Math.round(((ramUsed) + Number.EPSILON) * 100) / 100;
+			let formattedRamUsed = Math.round(((ramUsed) + Number.EPSILON) * 100) / 100;
 			let ramUsedPercent = Math.round(((100 / ns.getServerMaxRam(host) * ramUsed) + Number.EPSILON) * 100) / 100;
 
-		ns.tprint(`Successfully started ${failedToStart.length ? '': 'all '}${successfullyStarted.length} instances. RAM left: ${formattedRamAvailable}/${ns.getServerMaxRam(host)}GB (~${ramUsedPercent}%)`);
+		ns.tprint(`Successfully started ${failedToStart.length ? '': 'all '}${successfullyStarted.length} instances. RAM used: ${formattedRamUsed}/${ns.getServerMaxRam(host)}GB (~${ramUsedPercent}%)`);
 	}
 	if (failedToStart.length) {
 		ns.tprint(`${failedToStart.length} instances failed to start: ${failedToStart.join(', ')}`);

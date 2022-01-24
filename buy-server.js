@@ -28,9 +28,17 @@ export async function main(ns) {
 	if (ns.getServerMoneyAvailable('home') < totalCost) {
 		ns.tprint(`You don't have enough money to purchase ${nOfServers} server(s) with ${mem}GB of RAM. You need \$${formatMoney(totalCost - moneyAvailable, 'm')} more`);
 	} else {
-		names.forEach((name) => {
-			ns.purchaseServer(name, mem);
-			ns.tprint(`Purchased server "${name}" with ${mem}GB of RAM for \$${formatMoney(purchaseCost, 'm')}`);
+		names.every((name) => {
+			let boughtServer = ns.purchaseServer(name, mem);
+
+			if (boughtServer) {
+				ns.tprint(`Purchased server "${boughtServer}" with ${mem}GB of RAM for \$${formatMoney(purchaseCost, 'm')}`);
+			}
+			else {
+				ns.tprint(`Failed to purchase server. Are you at max capacity?`);
+			}
+
+			return !!boughtServer;
 		});
 	}
 }
