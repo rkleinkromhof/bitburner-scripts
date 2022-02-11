@@ -1,3 +1,9 @@
+import {
+	formatMoney,
+	formatPercent,
+	formatRam
+} from '/util-formatters.js';
+
 /** @param {NS} ns **/
 export async function main(ns) {
 	if (ns.args.length !== 2 || ns.args[0] === 'help') {
@@ -45,10 +51,9 @@ export async function main(ns) {
 
 	if (pid > 0) {
 		let ramUsed = ns.getServerUsedRam(target);
-		let formattedRamUsed = Math.round(((ramUsed) + Number.EPSILON) * 100) / 100;
-		let ramUsedPercent = Math.round(((100 / ns.getServerMaxRam(target) * ramUsed) + Number.EPSILON) * 100) / 100;
+		let ramUsedPercent = 100 / ns.getServerMaxRam(target) * ramUsed;
 
-		ns.tprint(`Successfully started the instance. RAM used: ${formattedRamUsed}/${ns.getServerMaxRam(target)}GB (~${ramUsedPercent}%)`);
+		ns.tprint(`Successfully started the instance. RAM used: ${formatRam(ramUsed)}/${formatRam(ns.getServerMaxRam(target))} (~${formatPercent(ramUsedPercent)}%)`);
 	} else {
 		ns.tprint(`Instance failed to start.`);
 	}

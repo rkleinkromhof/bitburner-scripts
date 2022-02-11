@@ -29,5 +29,5 @@ export async function main(ns) {
 		}
 	}
 
-	ns.tprint(`Total number of ways to represent ${number}: ${dp[n]}`);;
+	ns.tprint(`Total number of ways to represent ${number}: ${dp[n]}`);
 }

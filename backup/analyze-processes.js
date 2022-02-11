@@ -1,4 +1,4 @@
-import {formatMagnitude} from './util-formatters.js';
+import {formatMoney} from './util-formatters.js';
 
 /**
  * @param {NS} ns Namespace
@@ -57,7 +57,7 @@ export async function main(ns) {
 		let valGrowPercent = ns.formulas.hacking.growPercent(server, threads, player);
 		let valGrowTime = ns.formulas.hacking.growTime(server, player);
 
-		ns.tprint(`Grow   (t=${paddedThreads}) - takes ${Math.round(valGrowTime / 1000)}s - grows by ~${Math.round((valGrowPercent + Number.EPSILON) * 100) / 100}% (=\$${formatMagnitude(valGrowPercent * serverGrowth * threads, 'm')} of ${serverMaxMoney} max) - raises security by ${growSecurityIncreaseRate * threads}`);
+		ns.tprint(`Grow   (t=${paddedThreads}) - takes ${Math.round(valGrowTime / 1000)}s - grows by ~${Math.round((valGrowPercent + Number.EPSILON) * 100) / 100}% (=${formatMoney(valGrowPercent * serverGrowth * threads)} of ${formatMoney(serverMaxMoney)} max) - raises security by ${growSecurityIncreaseRate * threads}`);
 	}
 	ns.tprint('---------------------------------------------------------------')
 
@@ -69,7 +69,7 @@ export async function main(ns) {
 		let valHackPercent = ns.formulas.hacking.hackPercent(server, player);
 		let valHackTime = ns.formulas.hacking.hackTime(server, player);
 
-		ns.tprint(`Hack   (t=${paddedThreads}) - takes ${Math.round(valHackTime / 1000)}s - ${(valHackChance * 100).toPrecision(3)}% chance to hack for \$${formatMagnitude(valHackPercent * serverMaxMoney * threads, 'm')} - raises security by ${hackSecurityIncreaseRate * threads} - yields ${Math.floor(valHackExp * threads)} xp`);
+		ns.tprint(`Hack   (t=${paddedThreads}) - takes ${Math.round(valHackTime / 1000)}s - ${(valHackChance * 100).toPrecision(3)}% chance to hack for ${formatMoney(valHackPercent * serverMaxMoney * threads)} - raises security by ${hackSecurityIncreaseRate * threads} - yields ${Math.floor(valHackExp * threads)} xp`);
 	}
 	ns.tprint('===============================================================');
 }

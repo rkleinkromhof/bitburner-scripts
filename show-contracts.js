@@ -15,7 +15,9 @@ export async function main(ns) {
 	if (contracts.length) {
 		ns.tprint(`${contracts.length} contracts found:`);
 		contracts.forEach((contract, number) => {
-			ns.tprint(`(${String.prototype.padStart.call(number, 2)}) ${contract.hostname} - ${contract.filename}`);
+			let type = ns.codingcontract.getContractType(contract.filename, contract.hostname);
+
+			ns.tprint(`(${String.prototype.padStart.call(number, 2)}) ${contract.hostname} - ${contract.filename} (${type})`);
 		});
 	} else {
 		ns.tprint(`No contracts found. Did you complete them all, you go-getter? ;)`);

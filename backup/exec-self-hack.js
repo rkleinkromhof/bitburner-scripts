@@ -1,3 +1,7 @@
+import {
+	formatMoney
+} from '/util-formatters.js';
+
 /**
  * @param {NS} ns
  **/
@@ -7,7 +11,7 @@ export async function main(ns) {
 		return;
 	}
 
-	let script = 'hack-v3.js';
+	let script = 'hack-server.js';
 	let target = ns.args[0];
 
 	// Copy the script file if it doesn't exist.
@@ -24,7 +28,7 @@ export async function main(ns) {
 	let maxMoney = ns.getServerMaxMoney(target);
 
 	if (maxMoney < minMoneyThresh) {
-		ns.tprint(`Server ${target} can only hold \$${maxMoney}. We require at least \$${minMoneyThresh} to make this worthwile.`);
+		ns.tprint(`Server ${target} can only hold ${formatMoney(maxMoney)}. We require at least ${formatMoney(minMoneyThresh)} to make this worthwile.`);
 	}
 
 	// If we should use the max number of threads, then calculate what that is.

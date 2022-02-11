@@ -1,6 +1,9 @@
+import ServerLight from '/classes/ServerLight.js';
+
 /**
- * Breaches the given server(s).
+ * Breaches the given server.
  * @param {NS} ns Namespace
+ * @returns {boolean} `true` if the given server is breached and we now have root access to it.
  **/
 export function breachServer(ns, target) {
 	if (ns.fileExists('BruteSSH.exe', 'home')) {
@@ -27,6 +30,7 @@ export function breachServer(ns, target) {
 		ns.nuke(target);
 	}
 	
+	return ns.hasRootAccess(target);
 }
 
 /**
@@ -34,7 +38,7 @@ export function breachServer(ns, target) {
  * @param {NS} ns Namespace
  * @param {number} serverMinMaxRam // Minimum of max RAM on a server. Default to 4GB.
  * @param {number} serverMinMaxMoney Minimum amount of max money available on a server or skip that server. Default to $1000.
- * @param {Array} options Filter options
+ * @param {ServerLight[]} options Filter options
  */
 export function scanServers(ns, serverMinMaxRam, serverMinMaxMoney, ...options) {
 	options = options ? Array.prototype.slice.call(options) : []; // Copy the options array, if we have one.
@@ -48,11 +52,17 @@ export function scanServers(ns, serverMinMaxRam, serverMinMaxMoney, ...options) 
 	let optionNoAvailableMoney = contains(options, 'nomoney');
 	let optionNoMaxMoney = contains(options, 'nomaxmoney');
 	let optionNoRam = contains(options, 'noram');
+	let optionAll = contains(options, 'all');
 
-	//ns.tprint(`Scanning for servers with options: ${options.join(', ')}`);
-
+	// Shortcut for scanning for all servers.
+	if (optionAll) {
+		return servers
+			.map(server => new ServerLight(ns, server))
+			.sort((serverA, serverB) => serverA.requiredHackingSkill - serverB.requiredHackingSkill);
+	}
+	
 	return servers
-		.map(server => ns.getServer(server))
+		.map(server => new ServerLight(ns, server))
 		.filter(server => server.numOpenPortsRequired <= openablePorts)
 		.filter(server => optionNoRam ? server.maxRam === 0 : server.maxRam >= serverMinMaxRam)
 		.filter(server => !optionNoAvailableMoney || server.moneyAvailable === 0)

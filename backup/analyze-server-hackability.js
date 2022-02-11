@@ -64,7 +64,7 @@ export async function main(ns) {
 		ns.tprint(`[${script}] does not exist on server`);
 	}
 
-	ns.tprint(`[Money available/max] \$${formatMoney(availableMoney, 'm')}/\$${formatMoney(maxMoney, 'm')}`);
+	ns.tprint(`[Money available/max] ${formatMoney(availableMoney)}/${formatMoney(maxMoney)}`);
 	
 	ns.tprint('===============================================================');
 }

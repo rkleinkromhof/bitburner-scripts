@@ -1,4 +1,4 @@
-import { formatMagnitude } from './util-formatters.js';
+import { formatMoney } from './util-formatters.js';
 
 /** @param {NS} ns **/
 export async function main(ns) {
@@ -39,7 +39,7 @@ export async function main(ns) {
 	}
 
 	if (spent) {
-		ns.tprint(`Bought ${boughtTools.join(', ')}; spent ${formatMagnitude(spent, 'k')}`);
+		ns.tprint(`Bought ${boughtTools.join(', ')}; spent ${formatMoney(spent)}`);
 	} else {
 		ns.tprint('Bought nothing... you broke, brah?');
 	}

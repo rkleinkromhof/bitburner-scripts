@@ -60,8 +60,6 @@ async function doBreachAndHack(ns, target) {
 
 	if (ns.serverExists(target)) {
 		// Check again for memory available; situation could've changed again.
-		let ramCost = ns.getScriptRam(getBreachScript());
-
 		if (!memoryAvailableFor(ns, getBreachScript())) {
 			ns.tprint(`Cannot start ${getBreachScript()} for ${target} because there's not enough memory available on this machine.`);
 		}
@@ -69,11 +67,8 @@ async function doBreachAndHack(ns, target) {
 			ns.tprint(`Cannot start ${getExecSelfHackScript()} for ${target} because there's not enough memory available on this machine.`);
 		}
 		else if (ns.exec(getBreachScript(), home, 1, target)) {
-			ns.tprint(`Breaching ${target}`);
-			
 			if (ns.exec(getExecSelfHackScript(), home, 1, target, 'max')) {
-				await ns.sleep(1000);
-				ns.tprint(`${target} hacked successfully.`);
+				await ns.sleep(50);
 				
 				return Promise.resolve(true); // Yaaay, success!
 			} else {
@@ -90,7 +85,7 @@ async function doBreachAndHack(ns, target) {
 }
 
 function getHackScript() {
-	return 'hack-v3.js';
+	return 'hack-server.js';
 }
 
 function getExecSelfHackScript() {

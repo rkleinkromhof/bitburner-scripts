@@ -1,6 +1,8 @@
 import { breachServer, getScanServerOptions, scanServers } from './util-servers.js';
 
-/** @param {NS} ns **/
+/**
+ * @param {NS} ns Namespace
+ */
 export async function main(ns) {
 	// Shortcut for usage logging.
 	if (ns.args.length === 0 || ns.args[0] === 'help') {
@@ -31,8 +33,6 @@ export async function main(ns) {
 		}
 		
 	}
-	
-	return Promise.resolve(true);
 }
 
 async function doBreach(ns, target) {
@@ -40,11 +40,8 @@ async function doBreach(ns, target) {
 		ns.tprint(`Breaching ${target}`);
 		breachServer(ns, target);
 
-		await ns.sleep(200);
-
-		return Promise.resolve(true); // Ok.
+		await ns.sleep(50);
 	} else {
 		ns.tprint(`Server ${target} does not exists.`);
 	}
-	return Promise.resolve(false); // Failed :'(
 }

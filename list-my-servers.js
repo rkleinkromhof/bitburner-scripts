@@ -5,9 +5,6 @@ export async function main(ns) {
 	let servers = deepScan(ns, ns.getHostname())
 		.map(server => ns.getServer(server))
 		.filter(server => server.purchasedByPlayer);
-	
-
-
 
 	let colHeaders = ['#', 'Hostname', 'RAM available', 'RAM max', 'Ram % av.'];
 	// let colPadding = ['start', 'start', 'end', 'end'];
