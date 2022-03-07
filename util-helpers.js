@@ -177,39 +177,51 @@ export function sorter(property, options = {}) {
 	return String.prototype.toLocaleLowerCase.call(direction) === 'asc' ? sorterAsc(property) : sorterDesc(property);
 }
 
-function sorterAsc(property) {
+export function sorterAsc(property) {
 	return (left, right) => left[property] - right[property];
 }
 
-function sorterDesc(property) {
+export function sorterDesc(property) {
 	return (left, right) => right[property] - left[property];
 }
 
-function isBoolean(value) {
+export function sortAlphabetical(a, b) {
+	return  a === b ? 0 : a < b ? -1 : 1
+}
+
+export function sortCaseInsensitiveAlphabetical(a, b) {
+	return sortAlphabetical(String.prototype.toLowerCase.call(a), String.prototype.toLowerCase.call(b));
+}
+
+export function isBoolean(value) {
 	return isType(value, 'boolean');
 }
 
-function isString(value) {
+export function isString(value) {
 	return isType(value, 'string');
 }
 
-function isFunction(value) {
+export function isObject(value) {
+	return isType(value, 'object') && !Array.isArray(value) && value !== null;
+}
+
+export function isFunction(value) {
 	return isType(value, 'function');
 }
 
-function isType(value, type) {
+export function isType(value, type) {
 	return typeof value === type;
 }
 
-function getFromValueOrFunction(value, _this, args) {
+export function getFromValueOrFunction(value, _this, args) {
 	return isFunction(value) ? value.call(_this || null, args ? [...args] : []) : value;
 }
 
-function createSimpleReturnFunction(value) {
+export function createSimpleReturnFunction(value) {
 	return () => value;
 }
 
-function identityFn(o) {
+export function identityFn(o) {
 	return o;
 }
 
@@ -244,6 +256,12 @@ class ArrayHelper {
 		return true;
 	}
 
+	eraseAll(arr) {
+		Array.prototype.splice.call(arr, 0, arr.length);
+
+		return arr;
+	}
+
 	include(arr, ...values) {
 		for (const value of values) {
 			if (!this.contains(arr, value)) {
@@ -261,19 +279,23 @@ class ArrayHelper {
 
 		// Short circuit if the same array is passed twice.
 		if (array1 === array2) {
+			// console.log('array1 === array2 => true');
 			return true;
 		}
 
 		if (len1 !== len2) {
+			// console.log(`array1.length (${len1}) !== array2.length (${len2}) => false`);
 			return false;
 		}
 
 		for (let i = 0; i < len1; ++i) {
 			if (array1[i] !== array2[i]) {
+				// console.log(`array1[${i}] !== array2[${i}] => false`);
 				return false;
 			}
 		}
 
+		// console.log('array1 ~= array2');
 		return true;
 	}
 }

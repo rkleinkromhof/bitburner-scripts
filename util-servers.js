@@ -35,34 +35,66 @@ export function breachServer(ns, target) {
 
 /**
  * Scans for servers matching the given conditions.
+ * 
+ * This returns ServerLight objects.
+ * @see #scanServers
  * @param {NS} ns Namespace
  * @param {number} serverMinMaxRam // Minimum of max RAM on a server. Default to 4GB.
  * @param {number} serverMinMaxMoney Minimum amount of max money available on a server or skip that server. Default to $1000.
- * @param {ServerLight[]} options Filter options
+ * @param {...Mixed} options Filter options
+ * @returns {ServerLight[]} servers
+ */
+export function scanServersLight(ns, serverMinMaxRam, serverMinMaxMoney, ...options) {
+	return doScanServers((ns, serverName) => new ServerLight(ns, serverName), ns, serverMinMaxRam, serverMinMaxMoney, ...options);
+}
+
+/**
+ * Scans for servers matching the given conditions.
+ * 
+ * This returns Server objects.
+ * @see #scanServersLight
+ * @param {NS} ns Namespace
+ * @param {number} serverMinMaxRam // Minimum of max RAM on a server. Default to 4GB.
+ * @param {number} serverMinMaxMoney Minimum amount of max money available on a server or skip that server. Default to $1000.
+ * @param {...Mixed} options Filter options
+ * @returns {Server[]} servers
  */
 export function scanServers(ns, serverMinMaxRam, serverMinMaxMoney, ...options) {
+	return doScanServers((ns, serverName) => ns.getServer(serverName), ns, serverMinMaxRam, serverMinMaxMoney, ...options);
+}
+
+/**
+ * Internal server scan function that does all the work.
+ * @param {Function} createServerFn function that takes an NS object and a server name string,
+ * @param {NS} ns Namespace
+ * @param {number} serverMinMaxRam // Minimum of max RAM on a server. Default to 4GB.
+ * @param {number} serverMinMaxMoney Minimum amount of max money available on a server or skip that server. Default to $1000.
+ * @param {...Mixed} options Filter options
+ * @returns {Server[]} servers
+ */
+function doScanServers(createServerFn, ns, serverMinMaxRam, serverMinMaxMoney, ...options) {
 	options = options ? Array.prototype.slice.call(options) : []; // Copy the options array, if we have one.
 
 	let openablePorts = getOpenablePorts(ns);
 	let servers = deepScan(ns, ns.getHostname());
 	let hackingSkill = ns.getHackingLevel();
-	let optionHacked = contains(options, 'hacked');
-	let optionUnhacked = contains(options, 'unhacked');
-	let optionHackable = contains(options, 'hackable');
-	let optionNoAvailableMoney = contains(options, 'nomoney');
-	let optionNoMaxMoney = contains(options, 'nomaxmoney');
-	let optionNoRam = contains(options, 'noram');
-	let optionAll = contains(options, 'all');
+	let optionHacked = options.includes('hacked');
+	let optionUnhacked = options.includes('unhacked');
+	let optionHackable = options.includes('hackable');
+	let optionNoAvailableMoney = options.includes('nomoney');
+	let optionNoMaxMoney = options.includes('nomaxmoney');
+	let optionNoRam = options.includes('noram');
+	let optionAll = options.includes('all');
 
 	// Shortcut for scanning for all servers.
 	if (optionAll) {
 		return servers
-			.map(server => new ServerLight(ns, server))
+			.map(server => createServerFn(ns, server))
 			.sort((serverA, serverB) => serverA.requiredHackingSkill - serverB.requiredHackingSkill);
 	}
 	
 	return servers
-		.map(server => new ServerLight(ns, server))
+		.map(server => createServerFn(ns, server))
 		.filter(server => server.numOpenPortsRequired <= openablePorts)
 		.filter(server => optionNoRam ? server.maxRam === 0 : server.maxRam >= serverMinMaxRam)
 		.filter(server => !optionNoAvailableMoney || server.moneyAvailable === 0)
@@ -128,7 +160,7 @@ export function deepScan(ns, hostname) {
  * @param {string} parent The parent server name (yes, this 'network' is a tree)
  * @param {string} hostname The host server name
  * @param {string} target The target server name
- * @returns {Promise<String[]>} path of servers to get from the root to the target.
+ * @returns {String[]} path of servers to get from the root to the target.
  */
 export function findNode(ns, parent, hostname, target) {
 	// Shortcut if we've already found our target.
@@ -151,13 +183,29 @@ export function findNode(ns, parent, hostname, target) {
 }
 
 /**
+ * @param {NS} ns Namespace
+ */
+export function connectTo(ns, hostname) {
+	const path = findNode(ns, null, ns.getHostname(), hostname);
+
+	// return Array.prototype.every.call(path, node => ns.connect(node));
+	return path.length && Array.prototype.every.call(path, node => {
+		const result = ns.connect(node);
+
+		if (result) {
+			ns.tprint(`connected to ${node}`);
+		} else {
+			ns.tprint(`could not connect to ${node}`);
+		}
+
+		return result;
+	});
+}
+
+/**
  * Get all options available for scanning servers.
  * @return {String[]} options
  */
 export function getScanServerOptions() {
 	return ['hacked', 'unhacked', 'hackable', 'noram', 'nomoney', 'nomaxmoney'];
-}
-
-function contains(arr, value) {
-	return Array.prototype.indexOf.call(arr, value) >= 0;
 }

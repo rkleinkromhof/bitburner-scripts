@@ -8,8 +8,8 @@ class IncorrectSuiteConfigurationError extends Error {
  * A unit test suite.
  */
 export default class TestSuite {
-	#passString = '[PASS]';
-	#failString = '[FAIL]';
+	#passString = '[✓]';
+	#failString = '[✗]';
 	
 	// Counters.
 	#passed;
@@ -71,22 +71,80 @@ export default class TestSuite {
 		this.#executeTests();
 		this.tearDown();
 		const timeEnd = Date.now();
-		this.#log(`Results - ${this.#passed}/${this.#testsRan} tests passed, ${this.#failed} failed${this.#ignored ? ` and ${this.#ignored} ignored` : ''}. Suite took ${this.#formatDuration(timeEnd - timeStart)}.`);
+
+		const message = `Results - ${this.#passed}/${this.#testsRan} tests passed, ${this.#failed} failed${this.#ignored ? ` and ${this.#ignored} ignored` : ''}. Suite took ${this.#formatDuration(timeEnd - timeStart)}.`;
+
+		if (this.#failed) {
+			this.#logWarning(message);
+		} else {
+			this.#log(message);
+		}
+	}
+
+	#processTestResults(results) {
+		const {
+			test,
+			passedAsserts,
+			failedAsserts,
+			ignored,
+			exception,
+		} = results;
+
+		if (ignored) {
+			// Ignored on purpose.
+			this.#ignored++;
+		} else if (exception) {
+			this.#failed++;
+			this.#logFailReason(test.name, exception.message);
+		} else {
+			if (failedAsserts.length) {
+				this.#failed++;
+				this.#testsRan++;
+
+				// Log failed asserts individually.
+				for (const fail of failedAsserts) {
+					this.#logFail(test.name, fail.failMessage);
+				}
+			} else if (passedAsserts.length) {
+				this.#passed++; // Only count test as passed if there's at least one passed assert and  there are no failed asserts.
+				this.#testsRan++;
+
+				if (passedAsserts.length && this.#logPassed) {			
+					// Log a passed test once, if configured to do so.
+					this.#logPass(test.name);
+				}
+			} else {
+				// No asserts in a test mean we ignore it.
+				this.#ignored++;
+			}
+		}
 	}
 
 	#executeTests() {
 		for (const test of this.tests) {
 			if (test.ignore) {
-				this.#ignored++;
+				// The entire test is ignored so we can process it immediately.
+				this.#processTestResults({
+					test,
+					ignored: true
+				});
 			}
 			else {
 				try {
-					const assertWrapper = this.#createAssertWrapper(test);
+					const wrapper = this.#createAssertWrapper(test);
 
-					test.fn.call(test, assertWrapper);
+					test.fn.call(test, wrapper.assert);
+
+					wrapper.processResults(test);
 				} catch (ex) {
-					this.#logFailReason(test.name, ex.message);
-					throw ex; // Comment in for debugging purposes.
+					this.#processTestResults({
+						test,
+						exception: ex
+					});
+
+					if (this.#logDebug) {
+						throw ex; // Rethrow asap when debugging.
+					}
 				}
 			}
 		}
@@ -96,60 +154,123 @@ export default class TestSuite {
 		this.#passed = this.#failed = this.#testsRan = this.#ignored = 0;
 	}
 
-
 	#createAssertWrapper(test) {
-		const _this = this;
-
-		return {
+		const wrapper = {
+			suite: this,
+			test,
+			recordedAsserts: [],
+			record: recording => wrapper.recordedAsserts.push(recording)
+		};
+		
+		wrapper.assert = {
 			equals(actual, expected) {
-				_this.#assertEquals(test, actual, expected);
+				const asserter = wrapper.suite.#determineAssertEqualsFn(expected);
+
+				wrapper.record({
+					result: asserter.call(wrapper.suite, actual, expected),
+					failMessage: `Expected ${actual} to be ${expected}`,
+				});
 			},
-			equalsStrict(actual, expected) {
-				_this.#doAssert(_this.#assertStrictEquals, test.name, actual, expected);
+			is(actual, expected) {
+				wrapper.record({
+					result: wrapper.suite.#assertStrictEquals(actual, expected),
+					failMessage: `Expected ${actual} to be ${expected}`,
+				});
 			},
 			equalsNull(actual) {
-				_this.#doAssert(_this.#assertIsNull, test.name, actual, null);
+				wrapper.record({
+					result: wrapper.suite.#assertIsNull(actual),
+					failMessage: `Expected ${actual} to be null`,
+				});
 			},
 			equalsUndefined(actual) {
-				_this.#doAssert(_this.#assertIsNull, test.name, actual, undefined);
+				wrapper.record({
+					result: wrapper.suite.#assertIsUndefined(actual),
+					failMessage: `Expected ${actual} to be undefined`,
+				});
 			},
 			equalsTrue(actual) {
-				_this.#doAssert(_this.#assertBooleanEquals, test.name, actual, true);
+				wrapper.record({
+					result: wrapper.suite.#assertBooleanEquals(actual, true),
+					failMessage: `Expected ${actual} to be true`,
+				});
 			},
 			equalsFalse(actual) {
-				_this.#doAssert(_this.#assertBooleanEquals, test.name, actual, false);
+				wrapper.record({
+					result: wrapper.suite.#assertBooleanEquals(actual, false),
+					failMessage: `Expected ${actual} to be false`,
+				});
 			},
 			arrayIsSize(actual, size) {
-				_this.#doAssert(_this.#assertNumberEquals, test.name, actual?.length, size);
+				const actualValue = actual.length;
+
+				wrapper.record({
+					result: wrapper.suite.#assertNumberEquals(actualValue, size),
+					failMessage: `Expected array size to be ${size} but was ${actualValue}`,
+				});
 			},
-			that(assertion) {
-				return {
+			fail(reason) {
+				wrapper.record({
+					result: false,
+					failMessage: reason || 'failed'
+				});
+			},
+			that(assertFn) {
+				const assertObj = {
 					hasBeenCalledWith(value) {
-						// _this.#doAssert(_this.#)
+						wrapper.record({
+							result: assertFn.hasBeenCalledWith(value),
+							failMessage: `Expected ${assertFn.name || 'function'} to have been called with ${value}, but it was called with (${assertFn.calls.map(call => JSON.stringify(call.args))})`
+						});
+
+						return continuation; // For chaining asserts.
+					},
+					hasBeenCalledTimes(times) {
+						wrapper.record({
+							result: assertFn.hasBeenCalledTimes(times),
+							failMessage: `Expected ${assertFn.name || 'function'} to have been called ${times} times, but it was called ${assertFn.calls.length} times`
+						});
+
+						return continuation; // For chaining asserts.
+					}
+				};
+				
+				if (!assertFn?.isMockFn) {
+					for (const prop in assertObj) {
+						assertObj[prop] = () => {
+							wrapper.record({
+								result: false,
+								failMessage: `${assertFn?.name || 'function'} is not a mock function!`
+							});
+						}
 					}
 				}
+
+				const continuation = {
+					and: assertObj
+				};
+
+				return assertObj;
 			}
 		};
-	}
 
-	#assertEquals(test, actual, expected) {
-		const asserter = this.#determineAssertEqualsFn(expected);
+		wrapper.processResults = () => {
+			const suite = wrapper.suite;
+			const passedAsserts = wrapper.recordedAsserts.filter(recording => recording.result);
+			const failedAsserts = wrapper.recordedAsserts.filter(recording => !recording.result);
 
-		this.#doAssert(asserter, test.name, actual, expected);
-	}
-
-	#doAssert(asserter, testName, actual, expected) {
-		if (!asserter.call(this, actual, expected)) {
-			this.#failed++;
-			this.#logFail(testName, actual, expected);
-		} else {
-			this.#passed++;
-
-			if (this.#logPassed) {
-				this.#logPass(testName);
+			if (passedAsserts.length + failedAsserts.length !== wrapper.recordedAsserts.length) {
+				suite.#log('wrapper.processResults', `addition error: ${passedAsserts.length} + ${failedAsserts.length} !== ${wrapper.recordedAsserts.length}`);
 			}
-		}
-		this.#testsRan++;
+
+			suite.#processTestResults({
+				test,
+				passedAsserts,
+				failedAsserts
+			});
+		};
+
+		return wrapper;
 	}
 
 	/**
@@ -159,19 +280,22 @@ export default class TestSuite {
 	 */
 	#determineAssertEqualsFn(value) {
 		const checkers = [
-			{ checkFn: this.#isUndefined, assertFn: this.#assertIsUndefined },
-			{ checkFn: this.#isNull, assertFn: this.#assertIsNull },
-			{ checkFn: this.#isArray, assertFn: this.#assertArrayEquals },
-			{ checkFn: this.#isBoolean, assertFn: this.#assertBooleanEquals },
-			{ checkFn: this.#isNumber, assertFn: this.#assertNumberEquals },
-			{ checkFn: this.#isObject, assertFn: this.#assertObjectEquals },
-			{ checkFn: this.#isString, assertFn: this.#assertStringEquals },
+			{ checkFn: this.#isUndefined, assertFn: this.#assertIsUndefined, name: 'isUndefined' },
+			{ checkFn: this.#isNull, assertFn: this.#assertIsNull, name: 'isNull' },
+			{ checkFn: this.#isArray, assertFn: this.#assertArrayEquals, name: 'isArray' },
+			{ checkFn: this.#isBoolean, assertFn: this.#assertBooleanEquals, name: 'isBoolean' },
+			{ checkFn: this.#isNumber, assertFn: this.#assertNumberEquals, name: 'isNumber' },
+			{ checkFn: this.#isObject, assertFn: this.#assertObjectEquals, name: 'isObject' },
+			{ checkFn: this.#isString, assertFn: this.#assertStringEquals, name: 'isString' },
 		];
 
 		for (const checker of checkers) {
 			if (checker.checkFn.call(this, value)) {
 				return checker.assertFn;
 			}
+		}
+		if (this.#logDebug) {
+			this.#debugLog('determineAssertEqualsFn', `Could not determine check method for value ${value}`);
 		}
 
 		return () => false;
@@ -186,8 +310,7 @@ export default class TestSuite {
 	}
 
 	#assertArrayEquals(actual, expected) {
-		// this.#log(`assertStrictEquals: ${expected} === ${actual}? => ${expected === actual}`);
-		this.#debugAssertLog('assertArrayEquals', actual, expected, this.#isArrayEquals(actual, expected));
+		// this.#debugAssertLog('assertArrayEquals', actual, expected, this.#isArrayEquals(actual, expected));
 		return this.#isArrayEquals(actual, expected);
 	}
 
@@ -213,19 +336,27 @@ export default class TestSuite {
 	}
 
 	#logFailReason(testName, reason) {
-		this.#log(`${this.#failString} ${this.#suiteName} - ${testName}: ${reason}`);
+		this.#logError(`${this.#failString} ${this.#suiteName} - ${testName}: ${reason}`);
 	}
 
-	#logFail(testName, actual, expected) {
-		this.#log(`ERROR: ${this.#failString} ${this.#suiteName} - ${testName}: Expected ${actual} to be ${expected}`);
+	#logFail(testName, message) {
+		this.#logError(`${this.#failString} ${this.#suiteName} - ${testName}: ${message}`);
 	}
 
 	#logPass(testName) {
-		this.#log(`${this.#passString} ${this.#suiteName} - ${testName}`);
+		this.#log(`       ${this.#passString} ${this.#suiteName} - ${testName}`);
 	}
 
 	#log(message) {
 		this.#ns.tprint(message);
+	}
+
+	#logError(message) {
+		this.#log(`ERROR: ${message}`);
+	}
+
+	#logWarning(message) {
+		this.#log(`WARN: ${message}`);
 	}
 
 	#isUndefined(value) {
@@ -332,6 +463,8 @@ export default class TestSuite {
 
 	/**
 	 * Format a duration (in milliseconds) as e.g. '1h 21m 6s' for big durations or e.g '12.5s' / '23ms' for small durations
+	 * 
+	 * This method is copied from `util-formatters.js` to here because we want this class to not have any dependencies.
 	 * @param {number} duration The duration in milliseconds.
 	 * @returns {string} A formatted duration.
 	 */

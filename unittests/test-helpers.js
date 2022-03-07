@@ -106,7 +106,7 @@ export async function main(_ns) {
 
 					assert.equals(result, [1, 2, 3, 4]);
 
-					Arrays.add(arr, 5, 6, 7)
+					Arrays.add(arr, 5, 6, 7);
 
 					assert.equals(result, [1, 2, 3, 4, 5, 6, 7]);
 				}
@@ -162,6 +162,15 @@ export async function main(_ns) {
 			},
 
 			{
+				name: 'Arrays - eraseAll - erases all items from the array',
+				fn: function(assert) {
+					const arr = [1, 2, 3, 4];
+
+					assert.equals(Arrays.eraseAll(arr), []);
+				}
+			},
+
+			{
 				name: 'Arrays - include - edits array in place',
 				fn: function(assert) {
 					const arr = [1, 2, 3];
@@ -190,13 +199,6 @@ export async function main(_ns) {
 					assert.equals(Arrays.include(arr, 4), [1, 2, 3, 4]);
 				}
 			},
-
-			// {
-			// 	name: '',
-			// 	fn: function(assert) {
-
-			// 	}
-			// }
 		],
 	});
 

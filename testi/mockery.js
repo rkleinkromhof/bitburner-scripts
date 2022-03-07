@@ -1,5 +1,6 @@
 import {
-	Arrays
+	Arrays,
+	isObject
 } from '/util-helpers.js';
 
 /**
@@ -24,7 +25,8 @@ class MockFnCall {
 		return this.#returned;
 	}
 
-	hasBeenCalledWith(args) {
+	hasBeenCalledWith(...args) {
+		// console.log(`MockFnCall#hasBeenCalledWith: Arrays.equals(${this.args} (${typeof this.args}), ${args}) (${typeof args})`);
 		return Arrays.equals(this.args, args);
 	}
 }
@@ -48,17 +50,30 @@ class MockFn {
 			return fn.returns;
 		};
 
-		result.returns = returnValue => {
-			fn.returns = returnValue;
+		Object.assign(result, {
+			returns: returnValue => {
+				fn.returns = returnValue;
 
-			return result;
-		}
+				return result;
+			},
+			throws: error => {
+				fn.thrown = error;
 
-		result.throws = error => {
-			fn.thrown = error;
+				return result;
+			},
+			resetCalls: () => fn.resetCalls(),
+			hasBeenCalledWith: value => fn.hasBeenCalledWith(value),
+			hasBeenCalledTimes: times => fn.hasBeenCalledTimes(times),
+		});
 
-			return result;
-		}
+		Object.defineProperties(result, {
+			isMockFn: {
+				value: true
+			},
+			calls: {
+				get: () => fn.calls
+			}
+		});
 
 		return result;
 	}
@@ -81,13 +96,23 @@ class MockFn {
 		this.#calls.push(call);
 	}
 
+	resetCalls() {
+		this.#calls = [];
+	}
+
 	hasBeenCalledWith(args) {
 		for (const call of this.#calls) {
 			if (call.hasBeenCalledWith(args)) {
+				// console.log('MockFn#hasBeenCalledWith: true');
 				return true;
 			}
 		}
+		// console.log('MockFn#hasBeenCalledWith: false');
 		return false;
+	}
+
+	hasBeenCalledTimes(times) {
+		return this.#calls.length === times;
 	}
 }
 
@@ -100,6 +125,23 @@ class Mockery {
 
 	fn() {
 		return MockFn.create();
+	}
+
+	obj(name, config) {
+		if (isObject(name)) {
+			config = name;
+			name = 'Mock Object';
+		}
+
+		let result = {};
+
+		for (const prop in config) {
+			if (Object.prototype.hasOwnProperty.call(config, prop)) {
+				result[prop] = this.fn().returns(config[prop]);
+			}
+		}
+
+		return result;
 	}
 }
 

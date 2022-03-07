@@ -24,7 +24,7 @@ let _ns;
  */
 let _log;
 
-let _host; // The host to run on. Should only be 'host'.
+let _host; // The host to run on. Should only be 'home'.
 
 const silencedServices = [
 	'disableLog',
@@ -36,53 +36,71 @@ const silencedServices = [
 	'sleep',
 ];
 
-let scheduledServices = [
+const services = [
+	{
+		name: 'TOR manager',
+		script: 'tor-manager.js',
+		args: [],
+		// Run immediately and only once. This runs until TOR has been purchased.
+		delay: 0,
+		runOnce: true
+	},
 	{
 		name: 'Stats Tracker',
 		script: 'track-stats.js',
 		args: [],
-		// Run immediately and only once. This runs continuously on its own.
+		// Start immediately and only once. This runs continuously on its own.
+		delay: 0,
 		runOnce: true
 	},
 	{
 		name: 'Host Manager',
 		script: 'host-manager.js',
-		args: ['-c'],
-		// Run immediately and only once. This runs in continuous mode without stopping.
+		// Start immediately and only once. This runs in continuous mode without stopping.
 		delay: 0,
 		runOnce: true
 	},
 	{
-		name: 'Gang Manager',
-		script: 'gang-manager.js',
-		args: ['-c'],
-		// Run immediately and only once. This runs in continuous mode without stopping.
-		delay: 0,
-		runOnce: true
-	},
-	{
-		name: 'Hacknet Manager',
-		script: 'hacknet-manager.js',
-		args: ['-c', '--max-payoff-time', '1h'],
-		// Run immediately and only once. It'll run until it's done.
+		name: 'Faction Manager',
+		script: 'faction-manager.js',
+		args: [],
+		// Start immediately and only once. This runs in continuous mode without stopping.
 		delay: 0,
 		runOnce: true,
 	},
 	{
-		name: 'Hacknet Manager',
-		script: 'hacknet-manager.js',
-		args: ['-c', '--max-payoff-time', '2h'],
-		// Run after 15 minutes and only once. It'll run until it's done.
-		delay: minutes(15),
+		name: 'Gang Manager',
+		script: 'gang-manager.js',
+		// Start immediately and only once. This runs in continuous mode without stopping.
+		delay: 0,
 		runOnce: true
 	},
 	{
 		name: 'Hacknet Manager',
 		script: 'hacknet-manager.js',
-		args: ['-c', '--max-payoff-time', '4h'],
-		// Run after an hour and only once. It'll run until it's done.
-		delay: hours(1),
-		runOnce: true
+		args: ['--max-payoff-time', '1h'],
+		// Run immediately and only once. It'll run until it's done.
+		delay: 0,
+		runOnce: true,
+		isHacknetManager: true,
+	},
+	{
+		name: 'Hacknet Manager',
+		script: 'hacknet-manager.js',
+		args: ['--max-payoff-time', '2h'],
+		// Run after 30 minutes and only once. It'll run until it's done.
+		delay: minutes(30),
+		runOnce: true,
+		isHacknetManager: true,
+	},
+	{
+		name: 'Hacknet Manager',
+		script: 'hacknet-manager.js',
+		args: ['--max-payoff-time', '4h'],
+		// Run after 2 hours and only once. It'll run until it's done.
+		delay: hours(2),
+		runOnce: true,
+		isHacknetManager: true,
 	},
 	{
 		name: 'Contract Manager',
@@ -93,11 +111,10 @@ let scheduledServices = [
 	}
 ];
 
-const unscheduledServices = [];
-
 const argsSchema = [
 	['ltt', false],
 	['log-to-terminal', false],
+	['no-hacknet-manager', false] // `true` to disable hacknet manager
 ];
 
 let startTime;
@@ -112,6 +129,8 @@ export async function main(ns) {
 
 	options = ns.flags(argsSchema);
 
+	const scheduledServices = services.slice();
+
 	_log = createLogger(ns, {
 		logToTerminal: options.ltt || options['log-to-terminal'], // -t or -log-to-terminal command line arguments; logs most messages to terminal too.
 		prefix: () => `[${formatTime()}] `
@@ -120,10 +139,18 @@ export async function main(ns) {
 	_log.info(`Daemon started`);
 	disableLogs(ns, silencedServices);
 
-	checkServicesConfigs(); // Check if services are configured correctly.
+	checkServicesConfigs(scheduledServices); // Check if services are configured correctly.
 
-	while (startScheduledServices()) {
-		await ns.sleep(loopInterval);
+	if (options['no-hacknet-manager']) {
+		unscheduleServices(scheduledServices.filter(service => service.isHacknetManager));
+	}
+
+	try {
+		while (startScheduledServices(scheduledServices)) {
+			await ns.sleep(loopInterval);
+		}
+	} catch (ex) {
+		_log.error(ex.message);
 	}
 
 	if (!scheduledServices.length) {
@@ -131,11 +158,16 @@ export async function main(ns) {
 	}
 }
 
+function installServices() {
+	Arrays.eraseAll(services);
+	
+}
+
 /**
  * Starts scheduled services according to their configurations.
  * @param {Object[]}
  */
-function startScheduledServices() {
+function startScheduledServices(scheduledServices) {
 	let thingsToDo = true;
 	const unschedule = [];
 
@@ -173,8 +205,7 @@ function startScheduledServices() {
 
 	if (unschedule.length) {
 		// Unschedule services that have run. Keep them in a separate array, because reasons, I don't know, leave me alone.
-		Arrays.include(unscheduledServices, unschedule);
-		Arrays.erase(scheduledServices, ...unschedule); // Remove unscheduled.
+		unscheduleServices(unschedule);
 
 		thingsToDo = scheduledServices.length > 0;
 	}
@@ -182,7 +213,11 @@ function startScheduledServices() {
 	return thingsToDo; // Do we have more things to do?
 }
 
-function checkServicesConfigs() {
+function unscheduleServices(scheduledServices, services) {
+		Arrays.erase(scheduledServices, ...services); // Remove unscheduled.
+}
+
+function checkServicesConfigs(scheduledServices) {
 	const faulyServices = [];
 
 	for (const service of scheduledServices) {

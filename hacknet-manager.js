@@ -41,8 +41,7 @@ let silencedServices = [
 ];
 
 const argsSchema = [
-	['continuous', false], // Set to true to run continuously, otherwise, it runs once.
-	['c', false], // Alias for continuous.
+	['once', false], // Set to true to run only once instead of continuously.
 	['max-payoff-time', '1h'], // Controls how far to upgrade hacknets. Can be a number of seconds, or an expression of minutes/hours (e.g. '123m', '4h').
 	['time', null], // Alias for max-payoff-time.
 	['interval', 250], // Rate at which the program purchases upgrades when running continuously.
@@ -52,8 +51,8 @@ const argsSchema = [
 	['upgrade-level-step', 1], // Upgrade node levels by this number. Defaults to 10, meaning upgrade in steps of 10 levels.
 ];
 
-let options;
-let maxPayoffTime,
+let options,
+	maxPayoffTime,
 	maxSpend,
 	spent,
 	upgradeLevelStep,
@@ -67,7 +66,7 @@ export async function main(ns) {
 
 	options = ns.flags(argsSchema);
 
-	let continuous = options.continuous || options.c;
+	let once = options.once;
 	let interval = options.interval;
 	let logToTerminal = options.terminal;
 
@@ -78,12 +77,8 @@ export async function main(ns) {
 
 	productionBeforeUpgrade = calcHacknetProduction();
 
-	if (options.tail) {
-		ns.tail();
-	}
-
 	_log = createLogger(ns, logToTerminal);
-	_log(`Starting Hacknet Manager ${continuous ? 'in continuous mode ' : ''}with max-payoff-time of ${formatDuration(maxPayoffTime)}, interval ${formatDuration(interval)} and ${maxSpend === Number.MAX_VALUE ? 'no spending limit' : `a spending limit of ${formatMoney(maxSpend)}`}`);
+	_log(`Starting Hacknet Manager ${once ? '' : 'in continuous mode '}with max-payoff-time of ${formatDuration(maxPayoffTime)}, interval ${formatDuration(interval)} and ${maxSpend === Number.MAX_VALUE ? 'no spending limit' : `a spending limit of ${formatMoney(maxSpend)}`}`);
 
 	let continueUpgrade = true;
 
@@ -91,7 +86,7 @@ export async function main(ns) {
 		continueUpgrade = upgradeHacknet();
 		await ns.sleep(interval);
 	}
-	while (continuous && continueUpgrade);
+	while (!once && continueUpgrade);
 
 	_log('Hacknet Manager done.');
 }

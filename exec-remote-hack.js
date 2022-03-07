@@ -15,12 +15,16 @@ const silencedLogs = [
 	'scp'
 ];
 
+export function autocomplete(data, args) {
+	return [...data.servers];
+}
+
 /**
  * @param {NS} ns
  **/
 export async function main(ns) {
 	if (ns.args.length < 2 || ns.args[0] === 'help') {
-		ns.tprint(`Usage: ${ns.getScriptName()} [host] [targets]`);
+		ns.tprint(`Usage: ${ns.getScriptName()} [host] [target]`);
 		return;
 	}
 

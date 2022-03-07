@@ -3,7 +3,7 @@ import {
 	disableLogs
 } from '/util-helpers.js';
 import {
-	scanServers
+	scanServersLight
 } from '/util-servers.js';
 
 import ContractSolverFactory from '/classes/ContractSolverFactory.js';
@@ -107,7 +107,7 @@ function solveContracts(contracts) {
 }
 
 function getContracts() {
-	let servers = scanServers(_ns, 0, 0);
+	let servers = scanServersLight(_ns, 0, 0);
 	let contracts = [];
 
 	for (let i = 0; i < servers.length; i++) {

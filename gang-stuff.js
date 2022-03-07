@@ -163,38 +163,38 @@ function needToReduceWantedLevel() {
 	// Gang Wanted Level Gain Rate: myGang.wantedLevelGainRate (=== sum of ns.formulas.gang.wantedLevelGain(...) for all members)
 	// Gang Wanted Level: myGang.wantedLevel
 
-	let myGang = ns.gang.getGangInformation();
+	let myGang = _ns.gang.getGangInformation();
 	let members = getGangMembers();
-	let wantedLevelPenalty = ns.formulas.gang.wantedPenalty(myGang);
+	let wantedLevelPenalty = _ns.formulas.gang.wantedPenalty(myGang);
 	let wantedLevelPenaltyPercent = 100 - (100 * wantedLevelPenalty);
 
 	if (myGang.wantedLevelGainRate < 0) {
-		// log(`Gang wantedLevel            : ${myGang.wantedLevel}`);
-		// log(`Gang wantedPenalty          : ${formatPercent(wantedLevelPenaltyPercent)} (${formatNumber(wantedLevelPenalty, 6, 6)})`);
-		// log(`Gang wantedLevelGainRate    : ${myGang.wantedLevelGainRate} (per cycle!)`);
-		// log(`Gang wantedLevelGainRate /s?: ${myGang.wantedLevelGainRate * 5}`);
-		log(`reaching min wanted level in: ${formatDuration(((myGang.wantedLevel - 1) / Math.abs(myGang.wantedLevelGainRate * 5 * 4)) * 1000)} (-ish?)`);
+		// _log(`Gang wantedLevel            : ${myGang.wantedLevel}`);
+		// _log(`Gang wantedPenalty          : ${formatPercent(wantedLevelPenaltyPercent)} (${formatNumber(wantedLevelPenalty, 6, 6)})`);
+		// _log(`Gang wantedLevelGainRate    : ${myGang.wantedLevelGainRate} (per cycle!)`);
+		// _log(`Gang wantedLevelGainRate /s?: ${myGang.wantedLevelGainRate * 5}`);
+		_log(`reaching min wanted level in: ${formatDuration(((myGang.wantedLevel - 1) / Math.abs(myGang.wantedLevelGainRate * 5 * 4)) * 1000)} (-ish?)`);
 	}
-	// log('-'.repeat(40));
+	// _log('-'.repeat(40));
 
 	return wantedLevelPenaltyPercent <= maxWantedPenalty;
 }
 
 async function recruitMembers() {
-	const nameGenerator = memberNameGenerator(ns.gang.getMemberNames());
+	const nameGenerator = memberNameGenerator(_ns.gang.getMemberNames());
 	let ok = true;
 
-	while (ok && ns.gang.canRecruitMember()) {
+	while (ok && _ns.gang.canRecruitMember()) {
 		const name = nameGenerator.next().value;
 
-		ok = ns.gang.recruitMember(name);
+		ok = _ns.gang.recruitMember(name);
 
 		if (ok) {
-			log(`Recruited new member: ${name}`);
+			_log(`Recruited new member: ${name}`);
 		} else {
-			log(`Something went wrong while recruiting a new member (${name}).`);
+			_log(`Something went wrong while recruiting a new member (${name}).`);
 		}
-		await ns.sleep(100);
+		await _ns.sleep(100);
 	}
 }
 
@@ -203,19 +203,19 @@ async function ascendMembers() {
 
 	for (const member of members) {
 		if (shouldAscend(member)) {
-			ns.gang.ascendMember(member.name);
-			log(`Ascending gang member ${member.name}`);
-			// ns.gang.setMemberTask(trainCombatTask);
+			_ns.gang.ascendMember(member.name);
+			_log(`Ascending gang member ${member.name}`);
+			// _ns.gang.setMemberTask(trainCombatTask);
 			// combatStats.forEach(stat => {
 			// 	const ascStat = stat + '_asc_mult';
-			// 	log(`ASCEND => ${member.name}.${stat}: ${member[ascStat]} * ${ns.gang.getAscensionResult(member.name)[stat]} => ${member[ascStat] * ns.gang.getAscensionResult(member.name)[stat]} >= ${getMemberAscMultThreshold(member[ascStat])}`);
+			// 	_log(`ASCEND => ${member.name}.${stat}: ${member[ascStat]} * ${_ns.gang.getAscensionResult(member.name)[stat]} => ${member[ascStat] * _ns.gang.getAscensionResult(member.name)[stat]} >= ${getMemberAscMultThreshold(member[ascStat])}`);
 			// });
 			
 		}
-		// else if (ns.gang.getAscensionResult(member.name)) {
+		// else if (_ns.gang.getAscensionResult(member.name)) {
 		// 	combatStats.forEach(stat => {
 		// 		const ascStat = stat + '_asc_mult';
-		// 		log(`DO NOT ASCEND => ${member.name}.${stat}: ${member[ascStat]} * ${ns.gang.getAscensionResult(member.name)[stat]} => ${member[ascStat] * ns.gang.getAscensionResult(member.name)[stat]} >= ${getMemberAscMultThreshold(member[ascStat])}`);
+		// 		_log(`DO NOT ASCEND => ${member.name}.${stat}: ${member[ascStat]} * ${_ns.gang.getAscensionResult(member.name)[stat]} => ${member[ascStat] * _ns.gang.getAscensionResult(member.name)[stat]} >= ${getMemberAscMultThreshold(member[ascStat])}`);
 		// 	});
 		// }
 	}
@@ -226,7 +226,7 @@ async function ascendMembers() {
  * @param {GangMemberInfo} member The gang member.
  */
 function shouldAscend(member) {
-	const ascensionResult = ns.gang.getAscensionResult(member.name);
+	const ascensionResult = _ns.gang.getAscensionResult(member.name);
 
 	if (ascensionResult) {
 		 const nOfPrimedStats = combatStats.filter(stat => {
@@ -262,10 +262,10 @@ async function reassignTasks() {
 		for (const reassignment of reassignments) {
 			// For now, don't touch Members that are assigned to reduce wanted level.
 			if (reassignment.member.task !== vigilanteTask) {
-				ns.gang.setMemberTask(reassignment.member.name, reassignment.task.name);
-				log(`Assigned ${reassignment.member.name} to ${reassignment.task.name}`);
+				_ns.gang.setMemberTask(reassignment.member.name, reassignment.task.name);
+				_log(`Assigned ${reassignment.member.name} to ${reassignment.task.name}`);
 			}
-			await ns.sleep(100);
+			await _ns.sleep(100);
 		}
 	}
 
@@ -273,9 +273,9 @@ async function reassignTasks() {
 }
 
 function buildCombatTaskStats() {
-	return ns.gang.getTaskNames() // Get all of this gang's tasks
+	return _ns.gang.getTaskNames() // Get all of this gang's tasks
 		.filter(task => trainingTasks.indexOf(task) < 0 && task !== territoryWarfareTask) // filter out training and warfare tasks
-		.map(task => ns.gang.getTaskStats(task)) // convert to GangTaskStats
+		.map(task => _ns.gang.getTaskStats(task)) // convert to GangTaskStats
 		.sort((taskA, taskB) => taskA.difficulty - taskB.difficulty); // sort by difficulty. This should already be the case, but just to be sure.
 }
 

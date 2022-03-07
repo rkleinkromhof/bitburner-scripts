@@ -16,9 +16,9 @@ export async function main(ns) {
 
 	if (target === 'nomaxmoney' || target === 'noram') {
 		targets = scanServers(ns, 4, 1000, target)
-			.filter(server => !server.purchasedByPlayer)
+			.filter(server => !server.purchasedByPlayer) // There's no reason to backdoor own servers.
 			.filter(server => !server.backdoorInstalled) // Remove all servers we've already backdoored
-			.map(server => server.hostname); // There's no reason to backdoor own servers.
+			.map(server => server.hostname);
 	}
 
 	if (targets.length === 0) {

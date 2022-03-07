@@ -45,27 +45,27 @@ export async function main(_ns) {
 			{
 				name: 'calcGrowBackThreads',
 				fn: function(assert) {
-					const nsObj = {
-						growthAnalyze: mockery.fn().returns(42),
-						hackAnalyzeThreads: mockery.fn().returns(10)
-					};
-					const sl = new ServerLight(nsObj, 'fake');
+					const nsObj = mockery.obj('Mock Namespace', {
+						growthAnalyze: 42.2,
+						getServerMaxMoney: 1000000 // A million
+					});
+					const sl = new ServerHackAnalysis(nsObj, 'fake');
 
 					// return Math.ceil(this.ns.growthAnalyze(this.hostname, this.maxMoney / (this.maxMoney - (hackMoney))));
-					
+					assert.equals(sl.calcGrowBackThreads(200000), 43);
+					// assert.equals();
 				}
 			},
 			{
 				name: 'calcHackThreads',
 				fn: function(assert) {
 					const nsObj = {
-						growthAnalyze: mockery.fn().returns(42),
 						hackAnalyzeThreads: mockery.fn().returns(10)
 					};
-					const sl = new ServerLight(nsObj, 'fake');
+					const sl = new ServerHackAnalysis(nsObj, 'fake');
 
-					assert.equals(sl.securityLevel, 42);
-					assert.equals(sl.hackDifficulty, 42); // Alias
+					// assert.equals(sl.securityLevel, 42);
+					// assert.equals(sl.hackDifficulty, 42); // Alias
 					
 				}
 			},

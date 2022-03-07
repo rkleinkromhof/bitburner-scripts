@@ -11,6 +11,7 @@ import {
 	disableLogs,
 } from '/util-helpers.js';
 
+
 const taskUnassigned = 'Unassigned';
 const trainCombatTask = 'Train Combat';
 const trainHackingTask = 'Train Hacking';
@@ -38,8 +39,21 @@ const taskThresholds = [
 
 const combatStats = ['str', 'def', 'dex', 'agi'];
 
+/**
+ * Global Namespace reference.
+ * @type NS
+ */
+let _ns;
+
+/**
+ * Logs the given message
+ * @param {String} message
+ * @type Function
+ */
+let _log;
+
 const silencedServices = [
-    'disableLog',
+	'disableLog',
 	'gang.ascendMember',
 	'gang.recruitMember',
 	'gang.setMemberTask',
@@ -55,20 +69,6 @@ const argsSchema = [
 	['terminal', false,], // `true` to log to terminal too.
 ];
 
-/**
- * @type {NS} ns Namespace
- */
-let ns;
-
-/**
- * @type {Ojbect} log Logger
- */
-let log;
-
-const avgOfLoops = 3; // Average out the loop duration over this many loops.
-const pollingInterval = 200; // ms
-const territoryWarfareDuration = 1000; // ms
-
 let options;
 let errorTolerance, interval, maxWantedPenalty;
 
@@ -76,75 +76,75 @@ let vigilanteMode = false;
 const vigilantes = [];
 const criminals = [];
 
-/** @param {NS} ns **/
-export async function main(_ns) {
-    ns = _ns;
+/**
+ * CLI autocomplete.
+ * @param {Object} data General data about the game you might want to autocomplete.
+ * @param {String[]} data.serrvers List of all servers in the game.
+ * @param {String[]} data.txts List of text files on the current server.
+ * @param {String[]} data.scripts List of all scripts on the current server.
+ * @param {String[]} data.flags The same flags function as passed with ns. Calling this function adds all the flags as autocomplete arguments.
+ * @param {String[]} args Current arguments. Minus `run script.js`.
+ */
+// export function autocomplete(data, args) {
+// 	let options = data.flags(argsSchema);
 
-    if (!ns.gang.inGang() && !ns.createGang('Slum Snakes')) {
-        ns.tprint(`Not in a gang and couldn't join one. Figure it out.`);
-        return;
-    }
+// 	return [...Object.keys(options).map(key => key.length === 1 ? `-${key}` : `--${key}`)]; // {"_":["a"],"continuous":false,"c":false,"error-tolerance":3,"interval":10000,"max-wanted-penalty":2,"tail":false,"terminal":false} 
+// 	// return [...data.flags(argsSchema)];
+// 	// return ['--continuous'];
+// }
 
-    disableLogs(ns, silencedServices);
+/**
+ * @param {NS} ns
+ */
+export async function main(ns) {
+	disableLogs(ns, silencedServices);
 	options = ns.flags(argsSchema);
 	interval = options.interval;
 	errorTolerance = options.errorTolerance;
 	maxWantedPenalty = options['max-wanted-penalty'];
-
-	log = createLogger(ns, {
-		logToTerminal: options.terminal,
-		prefix: () => `[${formatTime()}] `
-	});
-
-    // const loopDuration = await determineLoopDuration();
-    // log(`Recorded loop duration as average over ${avgOfLoops}: ${formatDuration(loopDuration)} (${loopDuration})`);
-    const loopDuration = 20000;
-
-    await sleepTillLoopStart();
-    await startMainLoop(loopDuration);
 	
-}
+	let once;
 
-async function startMainLoop(duration) {
-    let once = options.once;
-    let polling = true;
+	_ns = ns;
+	_log = createLogger(ns, options.terminal);
 
-    do {
-        try {
-            let loopStartTime = Date.now();
+	if (options.tail) {
+		ns.tail();
+	}
 
-            while ((Date.now() - loopStartTime) < (duration - territoryWarfareDuration)) {
-                await doCriminalActivities();
-                await ns.sleep(pollingInterval);
-            }
+	if (ns.gang.inGang()) {
+		let polling = true;
+		let errors = 0;
 
-            strengthenTerritory();
+		do {
+			try {
+				identifyCriminalsAndVigilantes();
+				vigilanteMode = needToReduceWantedLevel();
+				await recruitMembers();
+				await ascendMembers();
+				await reassignTasks();
+			} catch (ex) {
+				if (ex instanceof TypeError) {
+					throw ex; // These are bugs we should fix immediately, so rethrow to get notified.
+				}
 
-            await sleepTillLoopStart();
-        } catch (ex) {
-            if (ex instanceof TypeError) {
-                throw ex; // These are bugs we should fix immediately, so rethrow to get notified.
-            }
+				_log(`Error: ${ex}`);
+				errors++;
+				if (errors > errorTolerance) {
+					_log('Too many errors; stopping script.');
+					polling = false;
+				}
+			}
 
-            log.error(ex.message);
-            polling = false;
-        }
-    }
-    while (!once && polling);
-}
+			if (!once) {
+				await ns.sleep(interval);
+			}
+		}
+		while (!once && polling);
 
-function strengthenTerritory() {
-   assignGangMembers(territoryWarfareTask);
-}
-
-async function doCriminalActivities() {
-    // assignGangMembers('Mug People');
-
-    identifyCriminalsAndVigilantes();
-    vigilanteMode = needToReduceWantedLevel();
-    await recruitMembers();
-    await ascendMembers();
-    await reassignTasks();
+	} else {
+		_log('Not in a gang. Please join one.');
+	}
 }
 
 function identifyCriminalsAndVigilantes() {
@@ -163,38 +163,38 @@ function needToReduceWantedLevel() {
 	// Gang Wanted Level Gain Rate: myGang.wantedLevelGainRate (=== sum of ns.formulas.gang.wantedLevelGain(...) for all members)
 	// Gang Wanted Level: myGang.wantedLevel
 
-	let myGang = ns.gang.getGangInformation();
+	let myGang = _ns.gang.getGangInformation();
 	let members = getGangMembers();
-	let wantedLevelPenalty = ns.formulas.gang.wantedPenalty(myGang);
+	let wantedLevelPenalty = _ns.formulas.gang.wantedPenalty(myGang);
 	let wantedLevelPenaltyPercent = 100 - (100 * wantedLevelPenalty);
 
 	if (myGang.wantedLevelGainRate < 0) {
-		// log(`Gang wantedLevel            : ${myGang.wantedLevel}`);
-		// log(`Gang wantedPenalty          : ${formatPercent(wantedLevelPenaltyPercent)} (${formatNumber(wantedLevelPenalty, 6, 6)})`);
-		// log(`Gang wantedLevelGainRate    : ${myGang.wantedLevelGainRate} (per cycle!)`);
-		// log(`Gang wantedLevelGainRate /s?: ${myGang.wantedLevelGainRate * 5}`);
-		log(`reaching min wanted level in: ${formatDuration(((myGang.wantedLevel - 1) / Math.abs(myGang.wantedLevelGainRate * 5 * 4)) * 1000)} (-ish?)`);
+		// _log(`Gang wantedLevel            : ${myGang.wantedLevel}`);
+		// _log(`Gang wantedPenalty          : ${formatPercent(wantedLevelPenaltyPercent)} (${formatNumber(wantedLevelPenalty, 6, 6)})`);
+		// _log(`Gang wantedLevelGainRate    : ${myGang.wantedLevelGainRate} (per cycle!)`);
+		// _log(`Gang wantedLevelGainRate /s?: ${myGang.wantedLevelGainRate * 5}`);
+		_log(`reaching min wanted level in: ${formatDuration(((myGang.wantedLevel - 1) / Math.abs(myGang.wantedLevelGainRate * 5 * 4)) * 1000)} (-ish?)`);
 	}
-	// log('-'.repeat(40));
+	// _log('-'.repeat(40));
 
 	return wantedLevelPenaltyPercent <= maxWantedPenalty;
 }
 
 async function recruitMembers() {
-	const nameGenerator = memberNameGenerator(ns.gang.getMemberNames());
+	const nameGenerator = memberNameGenerator(_ns.gang.getMemberNames());
 	let ok = true;
 
-	while (ok && ns.gang.canRecruitMember()) {
+	while (ok && _ns.gang.canRecruitMember()) {
 		const name = nameGenerator.next().value;
 
-		ok = ns.gang.recruitMember(name);
+		ok = _ns.gang.recruitMember(name);
 
 		if (ok) {
-			log(`Recruited new member: ${name}`);
+			_log(`Recruited new member: ${name}`);
 		} else {
-			log(`Something went wrong while recruiting a new member (${name}).`);
+			_log(`Something went wrong while recruiting a new member (${name}).`);
 		}
-		await ns.sleep(100);
+		await _ns.sleep(100);
 	}
 }
 
@@ -203,19 +203,19 @@ async function ascendMembers() {
 
 	for (const member of members) {
 		if (shouldAscend(member)) {
-			ns.gang.ascendMember(member.name);
-			log(`Ascending gang member ${member.name}`);
-			// ns.gang.setMemberTask(trainCombatTask);
+			_ns.gang.ascendMember(member.name);
+			_log(`Ascending gang member ${member.name}`);
+			// _ns.gang.setMemberTask(trainCombatTask);
 			// combatStats.forEach(stat => {
 			// 	const ascStat = stat + '_asc_mult';
-			// 	log(`ASCEND => ${member.name}.${stat}: ${member[ascStat]} * ${ns.gang.getAscensionResult(member.name)[stat]} => ${member[ascStat] * ns.gang.getAscensionResult(member.name)[stat]} >= ${getMemberAscMultThreshold(member[ascStat])}`);
+			// 	_log(`ASCEND => ${member.name}.${stat}: ${member[ascStat]} * ${_ns.gang.getAscensionResult(member.name)[stat]} => ${member[ascStat] * _ns.gang.getAscensionResult(member.name)[stat]} >= ${getMemberAscMultThreshold(member[ascStat])}`);
 			// });
 			
 		}
-		// else if (ns.gang.getAscensionResult(member.name)) {
+		// else if (_ns.gang.getAscensionResult(member.name)) {
 		// 	combatStats.forEach(stat => {
 		// 		const ascStat = stat + '_asc_mult';
-		// 		log(`DO NOT ASCEND => ${member.name}.${stat}: ${member[ascStat]} * ${ns.gang.getAscensionResult(member.name)[stat]} => ${member[ascStat] * ns.gang.getAscensionResult(member.name)[stat]} >= ${getMemberAscMultThreshold(member[ascStat])}`);
+		// 		_log(`DO NOT ASCEND => ${member.name}.${stat}: ${member[ascStat]} * ${_ns.gang.getAscensionResult(member.name)[stat]} => ${member[ascStat] * _ns.gang.getAscensionResult(member.name)[stat]} >= ${getMemberAscMultThreshold(member[ascStat])}`);
 		// 	});
 		// }
 	}
@@ -226,7 +226,7 @@ async function ascendMembers() {
  * @param {GangMemberInfo} member The gang member.
  */
 function shouldAscend(member) {
-	const ascensionResult = ns.gang.getAscensionResult(member.name);
+	const ascensionResult = _ns.gang.getAscensionResult(member.name);
 
 	if (ascensionResult) {
 		 const nOfPrimedStats = combatStats.filter(stat => {
@@ -262,10 +262,10 @@ async function reassignTasks() {
 		for (const reassignment of reassignments) {
 			// For now, don't touch Members that are assigned to reduce wanted level.
 			if (reassignment.member.task !== vigilanteTask) {
-				ns.gang.setMemberTask(reassignment.member.name, reassignment.task.name);
-				log(`Assigned ${reassignment.member.name} to ${reassignment.task.name}`);
+				_ns.gang.setMemberTask(reassignment.member.name, reassignment.task.name);
+				_log(`Assigned ${reassignment.member.name} to ${reassignment.task.name}`);
 			}
-			await ns.sleep(100);
+			await _ns.sleep(100);
 		}
 	}
 
@@ -273,9 +273,9 @@ async function reassignTasks() {
 }
 
 function buildCombatTaskStats() {
-	return ns.gang.getTaskNames() // Get all of this gang's tasks
+	return _ns.gang.getTaskNames() // Get all of this gang's tasks
 		.filter(task => trainingTasks.indexOf(task) < 0 && task !== territoryWarfareTask) // filter out training and warfare tasks
-		.map(task => ns.gang.getTaskStats(task)) // convert to GangTaskStats
+		.map(task => _ns.gang.getTaskStats(task)) // convert to GangTaskStats
 		.sort((taskA, taskB) => taskA.difficulty - taskB.difficulty); // sort by difficulty. This should already be the case, but just to be sure.
 }
 
@@ -311,73 +311,20 @@ function getIdealTask(member) {
 	return Object.assign({}, suitedTasks[0]);
 }
 
-async function determineLoopDuration() {
-    let loops = 0;
-    let lastGangsPower = getGangsTotalPower();
-    let loopStartTime = 0;
-    let loopEndTime = 0;
-
-    log(`Waiting for gangs power processing tick...`);
-
-    await sleepTillLoopStart();
-    loopStartTime = Date.now();
-    log(`Loop started at ${loopStartTime}`);
-    lastGangsPower = getGangsTotalPower();
-
-    // Record loops time.
-    while (loops < avgOfLoops) {
-        const currentGangPower = getGangsTotalPower();
-        if (lastGangsPower !== currentGangPower) {
-            lastGangsPower = currentGangPower;
-            loops++;
-            log(`Detected loop ${loops} of ${avgOfLoops}`);
-        }
-        if (loops < avgOfLoops) {
-            await ns.sleep(pollingInterval);
-        }
-    }
-    loopEndTime = Date.now();
-    log(`Loop ended at ${loopEndTime}`);
-
-    return (loopEndTime - loopStartTime) / loops;
-}
-
-async function sleepTillLoopStart() {
-    // Wait for loop start.
-    const gangPowerAtStart = getGangsTotalPower();
-
-    while (gangPowerAtStart === getGangsTotalPower()) {
-        await ns.sleep(pollingInterval);
-    }
-    return;
-}
-
-function getGangsTotalPower() {
-    const gangsInfo = ns.gang.getOtherGangInformation();
-    let power = 0;
-
-    for (const gangName of Object.keys(gangsInfo)) {
-        power += gangsInfo[gangName].power;
-    }
-
-    return power;
-}
-
-function assignGangMembers(task) {
-    const members = getGangMembers();
-
-    for (const member of members) {
-        // For now, don't touch Members that are assigned to reduce wanted level.
-        if (member.task !== vigilanteTask && member.task !== task) {
-            ns.gang.setMemberTask(member.name, task);
-            log(`Assigned ${member.name} to ${task}`);
-        }
-    }
-}
-
 function getGangMembers() {
-	return ns.gang.getMemberNames()
-		.map(name => ns.gang.getMemberInformation(name));
+	return _ns.gang.getMemberNames()
+		.map(name => _ns.gang.getMemberInformation(name));
+}
+
+function printMemberInfo() {
+	const names = _ns.gang.getMemberNames();
+
+	_log('Meet the gang:');
+	for (let i = 0; i < names.length; i++) {
+		let member = _ns.gang.getMemberInformation(names[i]);
+
+		_log(`${member.name} ${member.task === taskUnassigned ? 'is unassigned' : `is assigned to ${member.task}`}. They have earned ${formatNumber(member.earnedRespect)} respect.`);
+	}
 }
 
 function* memberNameGenerator(exclude = null) {

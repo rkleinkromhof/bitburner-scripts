@@ -20,9 +20,9 @@ const hackSecurityIncreaseRate = 0.002;
 // Tolerances and thresholds
 const serverMinSecurityTolerance = 0.01; // We allow a difference of this factor between current and minimum security.
 const serverMaxMoneyTolerance = 0.01; // We allow a difference of this factor between current and maximum money.
-const hackChanceWarnLevel = 0.9;
+const hackChanceWarnLevel = 0.9; // Warn if hack chance is below this number (0.9 = 90%)
 
-const primaryHackMoneyFactor = 0.0625;
+const primaryHackMoneyFactor = 0.0625; // Hack for this factor of money (0.0625 = 6.25%)
 const hackMoneyFactors = [primaryHackMoneyFactor, 0.01, 0.005, 0.001]; // Attempt our primary factor first. If that isn't optimal, fall back to lower values.
 
 const silencedServices = [
@@ -38,11 +38,14 @@ const silencedServices = [
 ];
 
 const argsSchema = [
-    ['continuous', false], // Set to true to run continuously, otherwise, it runs once.
-	['c', false], // Alias for continuous.
+    ['once', false], // Set to true to run only once instead of continuously.
 	['interval', 200], // Interval between batches and batch operations.
 	['terminal', false], // `true` to log to terminal too.
 ];
+
+export function autocomplete(data, args) {
+    return [...data.servers];
+}
 
 /** @param {NS} ns **/
 export async function main(ns) {
@@ -58,7 +61,7 @@ export async function main(ns) {
 
     let options = ns.flags(argsSchema);
 
-    const continuous = options.c || options.continuous;
+    const once = options.once;
 	const interval = options.interval;
 	const logToTerminal = options.terminal;
 
@@ -108,7 +111,7 @@ export async function main(ns) {
                 await startHwgwBatch(ns, {
                     host,
                     target,
-                    batchNum: '1',
+                    batchNum: '1', // Just single batches for now.
                     threadsHack: threadsNeeded.hack,
                     threadsWeaken1: threadsNeeded.weaken1,
                     threadsGrow: threadsNeeded.grow,
@@ -122,7 +125,7 @@ export async function main(ns) {
             await ns.sleep(batchInterval);
         }
     }
-    while (continuous);
+    while (!once);
 }
 
 /**
@@ -180,9 +183,9 @@ async function prepLowerSecurity(ns, options) {
     const timeStart = Date.now();
 
     if (threadsNeeded <= maxThreads) {
-        ns.log.info(`Prepping ${target} (${options.batchName}) - lowering security by ${securityReduction} in ${threadsNeeded} threads and ${formatDuration(duration)}`);
+        ns.log.info(`Prepping ${target} (${options.batchName}) - lowering security by ${securityReduction} in ${formatDuration(duration)} using ${threadsNeeded} threads`);
     } else {
-        ns.log.info(`Prepping ${target} (${options.batchName}) - lowering security by ${maxThreads * weakenSecurityLowerRate} in ${maxThreads} threads and ${formatDuration(duration)}. Need to run ${Math.ceil(threadsNeeded - maxThreads)} additional threads.`);
+        ns.log.info(`Prepping ${target} (${options.batchName}) - lowering security by ${maxThreads * weakenSecurityLowerRate} in ${formatDuration(duration)} using ${maxThreads} threads. Need to run ${Math.ceil(threadsNeeded - maxThreads)} additional threads.`);
     }
 
     execWeaken(ns, {
@@ -209,9 +212,9 @@ async function prepGrowMoney(ns, options) {
     const timeStart = Date.now();
 
     if (threadsNeeded <= maxThreads) {
-        ns.log.info(`Prepping ${target} (${options.batchName}) - growing money by ${growthFactor} in ${threadsNeeded} threads and ${formatDuration(duration)}`);
+        ns.log.info(`Prepping ${target} (${options.batchName}) - growing money by ${growthFactor} in ${formatDuration(duration)} using ${threadsNeeded} threads`);
     } else {
-        ns.log.info(`Prepping ${target} (${options.batchName}) - growing money by ${maxThreads * weakenSecurityLowerRate} in ${maxThreads} threads and ${formatDuration(duration)}. Need to run ${Math.ceil(threadsNeeded - maxThreads)} additional threads.`);
+        ns.log.info(`Prepping ${target} (${options.batchName}) - growing money by ${maxThreads * weakenSecurityLowerRate} in ${formatDuration(duration)} using ${maxThreads} threads. Need to run ${Math.ceil(threadsNeeded - maxThreads)} additional threads.`);
     }
 
     execGrow(ns, {
