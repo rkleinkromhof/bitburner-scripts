@@ -76,7 +76,52 @@ export const allGameServers = [
 	'ecorp',
 	'fulcrumassets',
 	'w0r1d_d43m0n'
-]
+];
+
+export const factions = [
+    // Early game
+    'CyberSec',
+    'Tian Di Hui',
+    'Netburners',
+
+    // City factions
+    'Sector-12',
+    'Aevum',
+    'Volhaven',
+    'Chongqing',
+    'New Tokyo',
+    'Ishima',
+
+    // Hacking Groups
+    'NiteSec',
+    'The Black Hand',
+    'BitRunners',
+
+    // Megacorporations
+    'ECorp',
+    'MegaCorp',
+    'KuaiGong International',
+    'Four Sigma',
+    'NWO',
+    'Blade Industries',
+    'OmniTek Incorporated',
+    'Bachman & Associates',
+    'Clarke Incorporated',
+    'Fulcrum Secret Technologies',
+
+    // Criminal Organizations
+    'Slum Snakes',
+    'Tetrads',
+    'Silhouette',
+    'Speakers for the Dead',
+    'The Dark Army',
+    'The Syndicate',
+
+    // End-game factions
+    'The Covenant',
+    'Daedalus',
+    'Illuminati',
+];
 
 const heightenedLogLevels = ['info', 'warning', 'error'];
 

@@ -1,75 +1,42 @@
+import Augmentations from '/classes/Augmentations.js';
 import {
-    Arrays,
-    sortCaseInsensitiveAlphabetical
-} from '/util-helpers.js';
-
-const factions = [
-        // Early game
-        'CyberSec',
-        'Tian Di Hui',
-        'Netburners',
-
-        // City factions
-        'Sector-12',
-        'Aevum',
-        'Volhaven',
-        'Chongqing',
-        'New Tokyo',
-        'Ishima',
-
-        // Hacking Groups
-        'NiteSec',
-        'The Black Hand',
-        'BitRunners',
-
-        // Megacorporations
-        'ECorp',
-        'MegaCorp',
-        'KuaiGong International',
-        'Four Sigma',
-        'NWO',
-        'Blade Industries',
-        'OmniTek Incorporated',
-        'Bachman & Associates',
-        'Clarke Incorporated',
-        'Fulcrum Secret Technologies',
-
-        // Criminal Organizations
-        'Slum Snakes',
-        'Tetrads',
-        'Silhouette',
-        'Speakers for the Dead',
-        'The Dark Army',
-        'The Syndicate',
-
-        // End-game factions
-        'The Covenant',
-        'Daedalus',
-        'Illuminati',
-    ];
+    formatMoney
+} from '/util-formatters.js';
 
 /** @param {NS} ns **/
 export async function main(ns) {
-    const augs = {};
-    
-    for (const faction of factions) {
-        const factionAugs = ns.getAugmentationsFromFaction(faction);
+    const tags = [...ns.args];
+    let notOwned = false;
+    let haveRep = false;
+    let haveMoney = false;
 
-        for (const factionAug of factionAugs) {
-            if (!Object.prototype.hasOwnProperty.call(augs, factionAug)) {
-                augs[factionAug] = [faction];
-            } else {
-                augs[factionAug].push(faction);
-                augs[factionAug].sort();
-            }
-        }
+    if (tags.includes('notowned')) {
+        tags.splice(tags.indexOf('notowned'), 1);
+        notOwned = true;
+    }
+    if (tags.includes('haverep')) {
+        tags.splice(tags.indexOf('haverep'), 1);
+        haveRep = true;
+    }
+    if (tags.includes('havemoney')) {
+        tags.splice(tags.indexOf('havemoney'), 1);
+        haveMoney = true;
     }
 
-    const augKeys = Object.keys(augs);
-    augKeys.sort(sortCaseInsensitiveAlphabetical);
+    const augs = Augmentations.createAugmentations(ns);
+    let i = 0;
 
-    for (let i = 0; i < augKeys.length; i++) {
-        const aug = augKeys[i];
-        ns.tprint(`(${String.prototype.padStart.call(i, 3)}) ${aug}: ${augs[aug].join(', ')}`);
+    augs.sort((augA, augB) => augB.price - augA.price);
+
+    for (const aug of augs) {
+        // ns.tprint(`(${String.prototype.padStart.call(++i, 3)}) ${aug.name}: ${aug.factions.join(', ')}`);
+        if (
+            (!tags.length || tags.some(tag => aug.tags.includes(tag))) &&
+            (!notOwned || !aug.isOwned) &&
+            (!haveRep || aug.haveEnoughRep) &&
+            (!haveMoney || aug.canAfford)
+        ) {
+            ns.tprint(`(${String.prototype.padStart.call(++i, 3)}) ${aug.name}: ${aug.tags.join(', ')} (${formatMoney(aug.price)} @ ${aug.factions.join(', ')})`);
+        }
     }
 }

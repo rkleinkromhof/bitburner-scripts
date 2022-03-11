@@ -11,6 +11,8 @@ import {
 	disableLogs,
 } from '/util-helpers.js';
 
+const createGangThreshold = -54000;
+
 const taskUnassigned = 'Unassigned';
 const trainCombatTask = 'Train Combat';
 const trainHackingTask = 'Train Hacking';
@@ -25,6 +27,7 @@ const territoryWarfareTask = 'Territory Warfare';
 
 const taskThresholds = [
 	{ name: trainCombatTask, difficulty: 0, hack: 0, str: 0, def: 0, dex: 0, agi: 0, cha: 0},
+	// { name: 'Human Trafficking', difficulty: 1.0, hack: 0, str: 40, def: 40, dex: 40, agi: 20, cha: 0 }, // hackety-hack
 	{ name: 'Mug People', difficulty: 1.0, hack: 0, str: 40, def: 40, dex: 40, agi: 20, cha: 0 }, // hack: 0, str: 25, def: 25, dex: 25, agi: 10, cha: 15
 	// { name: 'Deal Drugs', difficulty: 3.5, hack: 0, str: 0, def: 0, dex: 20, agi: 20, cha: 60 }, // hack: 0, str: 0, def: 0, dex: 20, agi: 20, cha: 60
 	// { name: 'Strongarm Civilians', difficulty: 5.0, hack: 10, str: 25, def: 25, dex: 20, agi: 10, cha: 10 }, // hack: 10, str: 25, def: 25, dex: 20, agi: 10, cha: 10
@@ -32,7 +35,7 @@ const taskThresholds = [
 	// { name: 'Armed Robbery', difficulty: 20.0, hack: 20, str: 15, def: 15, dex: 20, agi: 10, cha: 20 }, // hack: 20, str: 15, def: 15, dex: 20, agi: 10, cha: 20
 	// { name: 'Traffick Illegal Arms', difficulty: 32.0, hack: 0, str: 500, def: 500, dex: 500, agi: 0, cha: 0 }, // hack: 15, str: 20, def: 20, dex: 20, agi: 0, cha: 25
 	// { name: 'Threaten & Blackmail', difficulty: 28.0, hack: 25, str: 25, def: 0, dex: 25, agi: 0, cha: 25 }, // hack: 25, str: 25, def: 0, dex: 25, agi: 0, cha: 25
-	{ name: 'Human Trafficking', difficulty: 36.0, hack: 0, str: 500, def: 500, dex: 700, agi: 0, cha: 100 }, // hack: 30, str: 5, def: 5, dex: 30, agi: 0, cha: 30
+	{ name: 'Human Trafficking', difficulty: 36.0, hack: 0, str: 500, def: 500, dex: 700, agi: 0, cha: 0 }, // hack: 30, str: 5, def: 5, dex: 30, agi: 0, cha: 30
 	// { name: 'Terrorism', difficulty: 36.0, hack: 0, str: 1200, def: 1200, dex: 1200, agi: 0, cha: 0} // hack: 20, str: 20, def: 20, dex: 20, agi: 0, cha: 20
 ];
 
@@ -53,6 +56,7 @@ const argsSchema = [
 	['max-wanted-penalty', 1], // The maximum percentage of wanted level penalty. When this is exceeded, Members are reassigned to reduce wanted level.
 	['tail', false], // `true` to tail the script.
 	['terminal', false,], // `true` to log to terminal too.
+	['training-only', false] // `true` to only do training tasks. This will still do Territory Warfare.
 ];
 
 /**
@@ -70,7 +74,7 @@ const pollingInterval = 200; // ms
 const territoryWarfareDuration = 1000; // ms
 
 let options;
-let errorTolerance, interval, maxWantedPenalty;
+let errorTolerance, interval, maxWantedPenalty, trainingOnly;
 
 let vigilanteMode = false;
 const vigilantes = [];
@@ -80,7 +84,12 @@ const criminals = [];
 export async function main(_ns) {
     ns = _ns;
 
-    if (!ns.gang.inGang() && !ns.createGang('Slum Snakes')) {
+	if (!ns.gang.inGang() && ns.heart.break() > createGangThreshold) {
+		ns.tprint(`Not in a gang and couldn't join one because our Karma is still too high (${ns.heart.break()}/${createGangThreshold}). Go murder some rando's.`);
+        return;
+	}
+
+    if (!ns.gang.inGang() && !ns.gang.createGang('Slum Snakes')) {
         ns.tprint(`Not in a gang and couldn't join one. Figure it out.`);
         return;
     }
@@ -90,6 +99,7 @@ export async function main(_ns) {
 	interval = options.interval;
 	errorTolerance = options.errorTolerance;
 	maxWantedPenalty = options['max-wanted-penalty'];
+	trainingOnly = options['training-only'];
 
 	log = createLogger(ns, {
 		logToTerminal: options.terminal,
@@ -284,6 +294,8 @@ function buildCombatTaskStats() {
  * @param {GangMemberInfo} member The gang member's info.
  */
 function getIdealTask(member) {
+	let filter;
+
 	// Combat gang tasks: (these outputs come from the Gang API)
 	//  c?  Task name                diff (hck/str/def/dex/agi/cha)
 	// ----------------------------------------------------------------------------------
@@ -303,10 +315,16 @@ function getIdealTask(member) {
 	// 		Train Charisma 			  8.0    0/  0/  0/  0/  0/100
 	// 		Territory Warfare 		  5.0   15/ 20/ 20/ 20/ 20/  5
 	// * => these are the tasks we count as combat tasks
+	if (trainingOnly) {
+		filter = task => task.name === trainCombatTask;
+	} else {
+		filter = task => member.hack >= task.hack && member.str >= task.str && member.def >= task.def && member.dex >= task.dex && member.agi >= task.agi && member.cha >= task.cha;
+	}
 	
-	let suitedTasks = taskThresholds
-		.filter(task => member.hack >= task.hack && member.str >= task.str && member.def >= task.def && member.dex >= task.dex && member.agi >= task.agi && member.cha >= task.cha)
+	const suitedTasks = taskThresholds
+		.filter(filter)
 		.sort((taskA, taskB) => taskB.difficulty - taskA.difficulty);
+
 	
 	return Object.assign({}, suitedTasks[0]);
 }

@@ -15,7 +15,7 @@ import {
  * Global Namespace reference.
  * @type NS
  */
-let _ns;
+let ns;
 
 /**
  * Logs the given message
@@ -122,8 +122,8 @@ let options;
 let loopInterval = seconds(1); // 1s between loops.
 
 /** @param {NS} ns **/
-export async function main(ns) {
-	_ns = ns;
+export async function main(_ns) {
+	ns = _ns;
 	_host = ns.getHostname();
 	startTime = Date.now();
 
@@ -142,7 +142,7 @@ export async function main(ns) {
 	checkServicesConfigs(scheduledServices); // Check if services are configured correctly.
 
 	if (options['no-hacknet-manager']) {
-		unscheduleServices(scheduledServices.filter(service => service.isHacknetManager));
+		unscheduleServices(scheduledServices, scheduledServices.filter(service => service.isHacknetManager));
 	}
 
 	try {
@@ -158,11 +158,6 @@ export async function main(ns) {
 	}
 }
 
-function installServices() {
-	Arrays.eraseAll(services);
-	
-}
-
 /**
  * Starts scheduled services according to their configurations.
  * @param {Object[]}
@@ -175,9 +170,9 @@ function startScheduledServices(scheduledServices) {
 		let {name, script, args = [], interval, delay, runOnce, lastRun, tailLog = false} = service;
 
 		if (serviceShouldRun(service)) {
-			if (_ns.getScriptRam(script) < (_ns.getServerMaxRam(_host) - _ns.getServerUsedRam(_host))) {
+			if (ns.getScriptRam(script) < (ns.getServerMaxRam(_host) - ns.getServerUsedRam(_host))) {
 				service.scriptInsufficientMemCount = 0;
-				let pid = _ns.exec(script, _host, 1, ...args);
+				let pid = ns.exec(script, _host, 1, ...args);
 
 				if (pid) {
 					_log.info(`Started scheduled service ${name} (${script})${interval ? `; it will run again after ${formatDuration(interval)}`: ''}`);
@@ -187,7 +182,7 @@ function startScheduledServices(scheduledServices) {
 						unschedule.push(service);
 					}
 					if (tailLog) {
-						_ns.tail(pid);
+						ns.tail(pid);
 					}
 				} else {
 					_log.error(`Scheduled service ${name} (${script}) could not be started!`);
@@ -205,7 +200,7 @@ function startScheduledServices(scheduledServices) {
 
 	if (unschedule.length) {
 		// Unschedule services that have run. Keep them in a separate array, because reasons, I don't know, leave me alone.
-		unscheduleServices(unschedule);
+		unscheduleServices(scheduledServices, unschedule);
 
 		thingsToDo = scheduledServices.length > 0;
 	}
@@ -213,8 +208,8 @@ function startScheduledServices(scheduledServices) {
 	return thingsToDo; // Do we have more things to do?
 }
 
-function unscheduleServices(scheduledServices, services) {
-		Arrays.erase(scheduledServices, ...services); // Remove unscheduled.
+function unscheduleServices(scheduledServices, servicesToUnschedule) {	
+	Arrays.erase(scheduledServices, ...servicesToUnschedule); // Remove unscheduled.'
 }
 
 function checkServicesConfigs(scheduledServices) {
@@ -251,7 +246,7 @@ function checkServicesConfigs(scheduledServices) {
 function serviceShouldRun(service) {
 	let {name, script, args = [], interval, delay, runOnce, lastRun} = service;
 
-	if (_ns.isRunning(script, _host, args)) {
+	if (ns.isRunning(script, _host, args)) {
 		// Safety catch. Could happen when a script is scheduled at multiple services
 		// or when a service runs long but has a short interval.
 		// Just return false and it'll start the next iteration when this one has finished running.
