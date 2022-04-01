@@ -46,7 +46,7 @@ const factionWorkTypes = [
 const argsSchema = [
 	['interval', 5000],
     ['once', false], // Set to true to run only once instead of continuously.
-	['city-faction-side', 'east'], // Which city factions to side with: west: Sector-12 and Aevum, central: Volhaven, east: Chonqing, New Tokyo, Ishima.
+	['city-faction-side', 'west'], // Which city factions to side with: west: Sector-12 and Aevum, central: Volhaven, east: Chonqing, New Tokyo, Ishima.
 	['allow-travel-for-faction', true],
 	['reserve-money', 1000000], // Reserve at least this much money when travelling.
 ];

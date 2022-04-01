@@ -129,7 +129,8 @@ export async function main(_ns) {
 
 	options = ns.flags(argsSchema);
 
-	const scheduledServices = services.slice();
+	// 'clone' it. Technically, Arrays will still be references, but that's ok (for now).
+	const scheduledServices = services.map(service => Object.assign({}, service));
 
 	_log = createLogger(ns, {
 		logToTerminal: options.ltt || options['log-to-terminal'], // -t or -log-to-terminal command line arguments; logs most messages to terminal too.

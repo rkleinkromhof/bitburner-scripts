@@ -3,6 +3,9 @@ export const seconds = value => value * 1000;
 export const minutes = value => 60 * seconds(value);
 export const hours = value => 60 * minutes(value);
 
+export const charCheck = '✓';
+export const charCross = '✗';
+
 export const allGameServers = [
 	'home',
 	'darkweb',

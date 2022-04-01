@@ -1,0 +1,7 @@
+# TODO
+
+[V] Built awesome stuff
+[ ] Move classes in train.js to separate class files
+[ ] unit test those classes
+[ ] built factory classes for those classes
+[ ] unit test THOSE classes

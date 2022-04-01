@@ -9,6 +9,10 @@ export async function main(ns) {
 	const doc = eval('document'); // Using document directly is expensive (25GB RAM!). This is a sneaky workaround.
 	const hook0 = doc.getElementById('overview-extra-hook-0');
 	const hook1 = doc.getElementById('overview-extra-hook-1');
+
+	ns.disableLog('disableLog');
+	ns.disableLog('sleep');
+
 	while (true) {
 		try {
 			const headers = []

@@ -1,0 +1,71 @@
+[home ~/]> run playground.js --ltt --eff > server-analysis-eff.txt
+playground.js: [14:05:20] processing 69 available servers
+playground.js: [14:05:20] ( 1) megacorp - (1292) (6.25%) runtime 3m 22s, est. profitability = $17.262m/s ($3.495b) or $17.760m/MB (197 GB), efficiency = 87714.94969982187/s/MB
+playground.js: [14:05:20] ( 2) ecorp - (1330) (6.25%) runtime 3m 28s, est. profitability = $14.625m/s ($3.048b) or $15.354m/MB (199 GB), efficiency = 73677.30877390782/s/MB
+playground.js: [14:05:20] ( 3) 4sigma - (1211) (6.25%) runtime 1m 56s, est. profitability = $9.498m/s ($1.098b) or $7.086m/MB (155 GB), efficiency = 61298.05683042849/s/MB
+playground.js: [14:05:20] ( 4) blade - (961) (6.25%) runtime 2m 17s, est. profitability = $12.038m/s ($1.653b) or $7.586m/MB (218 GB), efficiency = 55231.18914298749/s/MB
+playground.js: [14:05:20] ( 5) clarkinc - (1053) (6.25%) runtime 1m 36s, est. profitability = $11.594m/s ($1.110b) or $5.217m/MB (213 GB), efficiency = 54494.002482452895/s/MB
+playground.js: [14:05:20] ( 6) b-and-a - (1006) (6.25%) runtime 2m 14s, est. profitability = $9.300m/s ($1.248b) or $5.263m/MB (237 GB), efficiency = 39207.31004117313/s/MB
+playground.js: [14:05:20] ( 7) kuai-gong - (1258) (6.25%) runtime 3m 17s, est. profitability = $7.903m/s ($1.558b) or $7.581m/MB (206 GB), efficiency = 38448.28351995326/s/MB
+playground.js: [14:05:20] ( 8) nwo - (1193) (6.25%) runtime 3m 7s, est. profitability = $10.169m/s ($1.902b) or $7.084m/MB (269 GB), efficiency = 37867.414320767144/s/MB
+playground.js: [14:05:20] ( 9) omnitek - (968) (6.25%) runtime 2m 27s, est. profitability = $6.794m/s ($1.002b) or $5.276m/MB (190 GB), efficiency = 35778.58083894736/s/MB
+playground.js: [14:05:20] (10) rho-construction - (517) (6.25%) runtime 37.9s, est. profitability = $1.018m/s ($38.616m) or $246.115k/MB (157 GB), efficiency = 6489.074130507731/s/MB
+playground.js: [14:05:20] (11) global-pharm - (782) (6.25%) runtime 1m 41s, est. profitability = $1.020m/s ($102.952m) or $579.195k/MB (178 GB), efficiency = 5737.5152945954005/s/MB
+playground.js: [14:05:20] (12) galactic-cyber - (838) (6.25%) runtime 1m 16s, est. profitability = $629.559k/s ($48.133m) or $359.069k/MB (134 GB), efficiency = 4696.4521792278665/s/MB
+playground.js: [14:05:20] (13) zeus-med - (844) (6.25%) runtime 1m 37s, est. profitability = $841.605k/s ($81.552m) or $429.223k/MB (190 GB), efficiency = 4429.501126033696/s/MB
+playground.js: [14:05:20] (14) unitalife - (780) (6.25%) runtime 1m 26s, est. profitability = $746.109k/s ($64.147m) or $371.759k/MB (173 GB), efficiency = 4324.019085336103/s/MB
+playground.js: [14:05:20] (15) zb-institute - (763) (6.25%) runtime 1m 21s, est. profitability = $696.980k/s ($56.129m) or $346.367k/MB (162 GB), efficiency = 4301.019839240611/s/MB
+playground.js: [14:05:20] (16) nova-med - (776) (6.25%) runtime 1m 29s, est. profitability = $859.147k/s ($76.638m) or $382.138k/MB (201 GB), efficiency = 4283.955589029382/s/MB
+playground.js: [14:05:20] (17) zb-def - (822) (6.25%) runtime 1m 23s, est. profitability = $729.549k/s ($60.390m) or $346.470k/MB (174 GB), efficiency = 4185.5935673750755/s/MB
+playground.js: [14:05:20] (18) applied-energetics - (790) (6.25%) runtime 1m 16s, est. profitability = $634.988k/s ($48.183m) or $303.897k/MB (159 GB), efficiency = 4004.972678186269/s/MB
+playground.js: [14:05:20] (19) fulcrumtech - (1011) (6.25%) runtime 2m 24s, est. profitability = $688.994k/s ($99.508m) or $533.841k/MB (186 GB), efficiency = 3696.3175590884202/s/MB
+playground.js: [14:05:20] (20) deltaone - (847) (6.25%) runtime 1m 45s, est. profitability = $942.430k/s ($99.174m) or $371.438k/MB (267 GB), efficiency = 3529.699082486806/s/MB
+playground.js: [14:05:20] (21) alpha-ent - (541) (6.25%) runtime 57.5s, est. profitability = $793.711k/s ($45.631m) or $195.131k/MB (234 GB), efficiency = 3394.101591153746/s/MB
+playground.js: [14:05:20] (22) univ-energy - (896) (6.25%) runtime 1m 55s, est. profitability = $630.999k/s ($72.861m) or $387.043k/MB (188 GB), efficiency = 3351.920972975692/s/MB
+playground.js: [14:05:20] (23) lexo-corp - (650) (6.25%) runtime 1m 6s, est. profitability = $680.076k/s ($44.706m) or $217.179k/MB (206 GB), efficiency = 3303.747689172656/s/MB
+playground.js: [14:05:20] (24) the-hub - (298) (6.25%) runtime 19.6s, est. profitability = $517.799k/s ($10.159m) or $64.012k/MB (159 GB), efficiency = 3262.756115021313/s/MB
+playground.js: [14:05:20] (25) powerhouse-fitness - (980) (6.25%) runtime 1m 34s, est. profitability = $599.639k/s ($56.250m) or $285.533k/MB (197 GB), efficiency = 3043.8545537814557/s/MB
+playground.js: [14:05:20] (26) comptek - (303) (6.25%) runtime 28.5s, est. profitability = $513.505k/s ($14.636m) or $85.641k/MB (171 GB), efficiency = 3004.7079573611377/s/MB
+playground.js: [14:05:20] (27) summit-uni - (429) (6.25%) runtime 34.4s, est. profitability = $631.799k/s ($21.757m) or $98.160k/MB (222 GB), efficiency = 2850.4350843718794/s/MB
+playground.js: [14:05:20] (28) omega-net - (182) (6.25%) runtime 9.27s, est. profitability = $423.295k/s ($3.925m) or $25.284k/MB (155 GB), efficiency = 2726.538419793777/s/MB
+playground.js: [14:05:20] (29) titan-labs - (852) (6.25%) runtime 1m 38s, est. profitability = $483.267k/s ($47.267m) or $258.288k/MB (183 GB), efficiency = 2640.8024210635967/s/MB
+playground.js: [14:05:20] (30) stormtech - (917) (6.25%) runtime 2m 11s, est. profitability = $496.000k/s ($65.036m) or $345.571k/MB (188 GB), efficiency = 2635.493803957843/s/MB
+playground.js: [14:05:20] (31) icarus - (881) (6.25%) runtime 2m 2s, est. profitability = $507.753k/s ($61.880m) or $319.877k/MB (193 GB), efficiency = 2624.7255516633813/s/MB
+playground.js: [14:05:20] (32) taiyang-digital - (889) (6.25%) runtime 1m 50s, est. profitability = $459.126k/s ($50.680m) or $264.303k/MB (192 GB), efficiency = 2394.3987787564997/s/MB
+playground.js: [14:05:20] (33) microdyne - (857) (6.25%) runtime 1m 30s, est. profitability = $383.015k/s ($34.581m) or $215.729k/MB (160 GB), efficiency = 2389.366441868075/s/MB
+playground.js: [14:05:20] (34) phantasy - (100) (6.25%) runtime 4.65s, est. profitability = $322.876k/s ($1.500m) or $10.753k/MB (140 GB), efficiency = 2314.524065011281/s/MB
+playground.js: [14:05:20] (35) solaris - (832) (6.25%) runtime 1m 43s, est. profitability = $446.707k/s ($46.186m) or $234.447k/MB (197 GB), efficiency = 2267.545955916137/s/MB
+playground.js: [14:05:20] (36) aerocorp - (874) (6.25%) runtime 2m 1s, est. profitability = $518.827k/s ($62.733m) or $248.006k/MB (253 GB), efficiency = 2051.1058305733472/s/MB
+playground.js: [14:05:20] (37) netlink - (407) (6.25%) runtime 43.6s, est. profitability = $394.354k/s ($17.188m) or $88.755k/MB (194 GB), efficiency = 2036.426310110638/s/MB
+playground.js: [14:05:20] (38) catalyst - (433) (6.25%) runtime 46.3s, est. profitability = $470.850k/s ($21.792m) or $93.188k/MB (234 GB), efficiency = 2013.4701841337164/s/MB
+playground.js: [14:05:20] (39) defcomm - (870) (6.25%) runtime 2m, est. profitability = $470.816k/s ($56.670m) or $240.689k/MB (235 GB), efficiency = 1999.6412978701578/s/MB
+playground.js: [14:05:20] (40) millenium-fitness - (505) (6.25%) runtime 37.1s, est. profitability = $421.403k/s ($15.625m) or $72.793k/MB (215 GB), efficiency = 1963.2100531991048/s/MB
+playground.js: [14:05:20] (41) syscore - (587) (6.25%) runtime 1m 13s, est. profitability = $412.705k/s ($30.269m) or $143.419k/MB (211 GB), efficiency = 1955.4856032569649/s/MB
+playground.js: [14:05:20] (42) omnia - (867) (6.25%) runtime 2m 4s, est. profitability = $455.495k/s ($56.502m) or $238.205k/MB (237 GB), efficiency = 1920.3011839212932/s/MB
+playground.js: [14:05:20] (43) silver-helix - (150) (6.25%) runtime 8.42s, est. profitability = $334.036k/s ($2.813m) or $15.496k/MB (182 GB), efficiency = 1840.4211285065692/s/MB
+playground.js: [14:05:20] (44) helios - (874) (6.25%) runtime 2m 5s, est. profitability = $362.497k/s ($45.325m) or $207.961k/MB (218 GB), efficiency = 1663.2098943355988/s/MB
+playground.js: [14:05:20] (45) vitalife - (892) (6.25%) runtime 1m 59s, est. profitability = $374.492k/s ($44.627m) or $193.863k/MB (230 GB), efficiency = 1626.8132520942972/s/MB
+playground.js: [14:05:20] (46) johnson-ortho - (278) (6.25%) runtime 18.4s, est. profitability = $264.680k/s ($4.868m) or $28.771k/MB (169 GB), efficiency = 1564.3013773860437/s/MB
+playground.js: [14:05:20] (47) infocomm - (929) (6.25%) runtime 2m 8s, est. profitability = $365.504k/s ($46.944m) or $199.382k/MB (235 GB), efficiency = 1552.3627511059835/s/MB
+playground.js: [14:05:20] (48) snap-fitness - (795) (6.25%) runtime 1m 16s, est. profitability = $368.361k/s ($28.125m) or $111.918k/MB (251 GB), efficiency = 1465.8231441830524/s/MB
+playground.js: [14:05:20] (49) rothman-uni - (406) (6.25%) runtime 35.8s, est. profitability = $324.630k/s ($11.628m) or $48.980k/MB (237 GB), efficiency = 1367.4386138960313/s/MB
+playground.js: [14:05:20] (50) max-hardware - (80) (6.25%) runtime 3.23s, est. profitability = $193.469k/s ($625.000k) or $3.980k/MB (157 GB), efficiency = 1231.8924570430343/s/MB
+playground.js: [14:05:20] (51) aevum-police - (442) (6.25%) runtime 53.5s, est. profitability = $290.930k/s ($15.557m) or $49.488k/MB (314 GB), efficiency = 925.4986163041318/s/MB
+playground.js: [14:05:20] (52) zer0 - (75) (6.25%) runtime 4.17s, est. profitability = $112.302k/s ($468.750k) or $3.788k/MB (124 GB), efficiency = 907.4947223716985/s/MB
+playground.js: [14:05:20] (53) harakiri-sushi - (40) (6.25%) runtime 2.29s, est. profitability = $109.314k/s ($250.000k) or $2.048k/MB (122 GB), efficiency = 895.6462213631856/s/MB
+playground.js: [14:05:20] (54) iron-gym - (100) (6.25%) runtime 6.06s, est. profitability = $206.237k/s ($1.250m) or $4.771k/MB (262 GB), efficiency = 787.1634729124515/s/MB
+playground.js: [14:05:20] (55) crush-fitness - (258) (6.25%) runtime 19.6s, est. profitability = $179.320k/s ($3.515m) or $13.786k/MB (255 GB), efficiency = 703.3553589574284/s/MB
+playground.js: [14:05:20] (56) neo-net - (50) (6.25%) runtime 3.23s, est. profitability = $96.734k/s ($312.500k) or $1.673k/MB (187 GB), efficiency = 517.9885150699025/s/MB
+playground.js: [14:05:20] (57) nectar-net - (20) (6.25%) runtime 2.00s, est. profitability = $85.768k/s ($171.875k) or $928.803/MB (185 GB), efficiency = 463.48658112275956/s/MB
+playground.js: [14:05:20] (58) joesguns - (10) (6.25%) runtime 1.58s, est. profitability = $98.932k/s ($156.250k) or $693.520/MB (225 GB), efficiency = 439.1106507311447/s/MB
+playground.js: [14:05:20] (59) hong-fang-tea - (30) (6.25%) runtime 2.05s, est. profitability = $91.413k/s ($187.500k) or $832.224/MB (225 GB), efficiency = 405.74051801330165/s/MB
+playground.js: [14:05:20] (60) sigma-cosmetics - (5) (6.25%) runtime 1.41s, est. profitability = $101.643k/s ($143.750k) or $331.565/MB (434 GB), efficiency = 234.4439431728104/s/MB
+playground.js: [14:05:20] (61) n00dles - (1) (6.25%) runtime 1.35s, est. profitability = $3.245k/s ($4.375k) or $212.895/MB (21 GB), efficiency = 157.9089130781918/s/MB
+playground.js: [14:05:20] (62) foodnstuff - (1) (6.25%) runtime 1.36s, est. profitability = $92.071k/s ($125.000k) or $147.059/MB (850 GB), efficiency = 108.31855002036683/s/MB
+playground.js: [14:05:20] (63) fulcrumassets - (1124) (6.25%) runtime 2m 56s, est. profitability = $354.460/s ($62.500k) or $3.916/MB (15.959 GB), efficiency = 0.02221049478276209/s/MB
+playground.js: [14:05:20] (64) The-Cave - (925) (6.25%) runtime 1.34s, est. profitability = $0.000/s ($0.000) or NaN/MB (0 GB), efficiency = NaN/s/MB
+playground.js: [14:05:20] (65) run4theh111z - (547) (6.25%) runtime 3.92s, est. profitability = $0.000/s ($0.000) or NaN/MB (0 GB), efficiency = NaN/s/MB
+playground.js: [14:05:20] (66) . - (524) (6.25%) runtime 3.82s, est. profitability = $0.000/s ($0.000) or NaN/MB (0 GB), efficiency = NaN/s/MB
+playground.js: [14:05:20] (67) I.I.I.I - (342) (6.25%) runtime 2.96s, est. profitability = $0.000/s ($0.000) or NaN/MB (0 GB), efficiency = NaN/s/MB
+playground.js: [14:05:20] (68) avmnite-02h - (208) (6.25%) runtime 2.32s, est. profitability = $0.000/s ($0.000) or NaN/MB (0 GB), efficiency = NaN/s/MB
+playground.js: [14:05:20] (69) CSEC - (59) (6.25%) runtime 1.62s, est. profitability = $0.000/s ($0.000) or NaN/MB (0 GB), efficiency = NaN/s/MB

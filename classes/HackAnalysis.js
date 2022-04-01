@@ -1,8 +1,8 @@
-import {
-	formatMoney,
-	formatPercent,
-	formatRam,
-} from '/util-formatters.js';
+// import {
+// 	formatMoney,
+// 	formatPercent,
+// 	formatRam,
+// } from '/util-formatters.js';
 
 /**
  * An analysis of Hack, Grow and Weaken on a Server.
@@ -92,7 +92,7 @@ export default class HackAnalysis  {
 	 * Is the amount of money available at a maximum?
 	 */
 	get isMoneyPrepped() {
-		return this.server.moneyAvailable >= this.server.maxMoney;
+		return this.server.moneyAvailable >= this.server.moneyMax;
 	}
 
 	/**
@@ -106,7 +106,7 @@ export default class HackAnalysis  {
 	 * The intended amount of money to hack for.
 	 */
 	get hackMoney() {
-		return this.#hackMoneyPercentage * this.server.maxMoney;
+		return this.#hackMoneyPercentage * this.server.moneyMax;
 	}
 
 	/**
@@ -120,7 +120,7 @@ export default class HackAnalysis  {
 	 * The amount of threads needed to grow back the amount of money we intend to hack for.
 	 */
 	get growThreads() {
-		return this.server.maxMoney ? Math.ceil(this.#ns.growthAnalyze(this.server.hostname, this.server.maxMoney / (this.server.maxMoney - this.hackMoney))) : 0;
+		return this.server.moneyMax ? Math.ceil(this.#ns.growthAnalyze(this.server.hostname, this.server.moneyMax / (this.server.moneyMax - this.hackMoney))) : 0;
 	}
 
 	/**
@@ -267,5 +267,26 @@ export default class HackAnalysis  {
 			// this.#ns.tprint(`[${this.server.hostname}] Percentage = ${formatPercent(this.hackMoneyPercentage)}, Hack money = ${formatMoney(this.hackMoney)}, threads = ${this.hackThreads}/${this.hackCounterWeakenThreads}/${this.growThreads}/${this.growCounterWeakenThreads}=${this.hackThreads + this.hackCounterWeakenThreads + this.growThreads + this.growCounterWeakenThreads}, RAM = ${formatRam(this.totalRamCost)}`);
 		}
 		// else: this.#ns.tprint(`[${this.server.hostname}] no RAM`);
+	}
+
+	printProps(printFn) {
+		printFn(`${this.server.hostname} hackMoneyPercentage: ${this.#hackMoneyPercentage}`);
+		printFn(`${this.server.hostname} moneyMax: ${this.server.moneyMax}`);
+
+		// printFn(`${this.server.hostname} isSecurityPrepped: ${this.isSecurityPrepped}`);
+		// printFn(`${this.server.hostname} isMoneyPrepped: ${this.isMoneyPrepped}`);
+		printFn(`${this.server.hostname} hackMoney: ${this.hackMoney}`);
+		printFn(`${this.server.hostname} hackThreads: ${this.hackThreads}`);
+		printFn(`${this.server.hostname} growThreads: ${this.growThreads}`);
+		printFn(`${this.server.hostname} hackSecurityIncrease: ${this.hakSecurityIncrease}`);
+		printFn(`${this.server.hostname} hackCounterWeakenThreads: ${this.hackCounterWeakenThreads}`);
+		printFn(`${this.server.hostname} growSecurityIncrease: ${this.growSecurityIncrease}`);
+		printFn(`${this.server.hostname} growCounterWeakenThreads: ${this.growCounterWeakenThreads}`);
+		printFn(`${this.server.hostname} totalRamCost: ${this.totalRamCost}`);
+		printFn(`${this.server.hostname} totalRuntime: ${this.totalRuntime}`);
+		printFn(`${this.server.hostname} adjustedHackMoney: ${this.adjustedHackMoney}`);
+		printFn(`${this.server.hostname} profitPerSec: ${this.profitPerSec}`);
+		printFn(`${this.server.hostname} profitPerMb: ${this.profitPerMb}`);
+		printFn(`${this.server.hostname} profitabilityEfficiency: ${this.profitabilityEfficiency}`);
 	}
 }

@@ -6,7 +6,8 @@ import {
 const silencedServices = [
 	'disableLog',
     'purchaseTor',
-	'scan'
+	'scan',
+    'sleep',
 ];
 
 const argsSchema = [

@@ -36,7 +36,9 @@ export async function main(ns) {
             (!haveRep || aug.haveEnoughRep) &&
             (!haveMoney || aug.canAfford)
         ) {
-            ns.tprint(`(${String.prototype.padStart.call(++i, 3)}) ${aug.name}: ${aug.tags.join(', ')} (${formatMoney(aug.price)} @ ${aug.factions.join(', ')})`);
+            const factions = aug.factions.filter(faction => ns.getFactionRep(faction) >= aug.repReq);
+            
+            ns.tprint(`(${String.prototype.padStart.call(++i, 3)}) ${aug.name}: ${aug.tags.join(', ')} (${formatMoney(aug.price)} @ ${factions.join(', ')})`);
         }
     }
 }

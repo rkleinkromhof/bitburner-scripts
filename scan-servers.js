@@ -35,7 +35,6 @@ const css =
 		width: 70px;
 	}
 	.server-list-header {
-		font-size: 16px;
 		font-weight: bold;
 		text-transform: capitalize;
 		border-bottom: 2px solid #339900;
@@ -144,6 +143,68 @@ const css =
 	.lessvisible {
 		opacity: 0.5;
 	}
+	.server-list.font-small {
+		font-size: 12px;
+		max-width: 1340px;
+	}
+	.server-list.font-small .server-list-header {
+		border-bottom-width: 1px;
+		margin-bottom: 8px;
+	}
+	.server-list.font-small .server-list-title {
+		font-size: 16px;
+	}
+	.server-list.font-small .server-list-tags {
+		width: 52px;
+	}
+	.server-list.font-small .server-list-cell {
+		min-width: 30px;
+	}
+	.server-list.font-small .server-list-idx {
+		width: 35px;
+	}
+	.server-list.font-small .server-list-hostname {
+		width: 150px;
+	}
+	.server-list.font-small .server-list-requiredhackingskill {
+		width: 35px;
+	}
+	.server-list.font-small .server-list-numopenportsrequired {
+		width: 35px;
+	}
+	.server-list.font-small .server-list-ramavailable {
+		width: 60px;
+	}
+	.server-list.font-small .server-list-maxram {
+		width: 60px;
+	}
+	.server-list.font-small .server-list-ramusedpercent {
+		width: 60px;
+	}
+	.server-list.font-small .server-list-moneyavailable {
+		width: 75px;
+	}
+	.server-list.font-small .server-list-moneymax {
+		width: 75px;
+	}
+	.server-list.font-small .server-list-cell-moneymax-adj {
+		width: 75px;
+	}
+	.server-list.font-small .server-list-moneyavailablepercent {
+		width: 60px;
+	}
+	.server-list.font-small .server-list-security {
+		width: 35px;
+	}
+	.server-list.font-small .server-list-securitymin {
+		width: 35px;
+	}
+	.server-list.font-small .server-list-hackchance {
+		width: 60px;
+	}
+	.server-list.font-small .server-list-score {
+		width: 50px;
+	}
 </style>`; 
 
 const serverListId = 'server-list';
@@ -204,7 +265,8 @@ const silencedServices = [
 const argsSchema = [
 	['sort', 'hackskill'],
 	['sortdir', 'asc'],
-	['desc', false] // Alias for --sortdir desc
+	['desc', false], // Alias for --sortdir desc
+	['small', false], // `true` to use small font
 ];
 
 /**
@@ -219,7 +281,8 @@ export async function main(ns) {
 		ns.tprint(` =>   --sort (tags | hostname | hackskill | openports | ramavailable | rammax | rampercent | moneyavailable | moneymax | moneymaxadj | moneypercent | security | securitymin | hackchance | score)`);
 		ns.tprint(` =>    	sort aliases: availableram | maxram | percentram | availablemoney | maxmoney | percentmoney | minsecurity)`);
 		ns.tprint(` =>   --sortdir (asc | desc)`);
-		ns.tprint(` =>   --desc`)
+		ns.tprint(` =>   --desc`);
+		ns.tprint(` =>   --small`);
 		return;
 	}
 
@@ -269,6 +332,7 @@ export async function main(ns) {
 		htmlPrintServers(ns, doc, serversLeft, {
 			hackingSkill: ns.getHackingLevel(),
 			openablePorts: getOpenablePorts(ns),
+			smallFont: !!flagOpts.small
 		});
 
 	} else {
@@ -288,7 +352,7 @@ function buildServersHtml(listId, servers, options) {
 	const rowJoinChar = '';
 	let html = [];
 		
-	html.push(`<div id='${listId}' class='server-list'>`);
+	html.push(`<div id='${listId}' class='server-list${options.smallFont ? ' font-small' : ''}'>`);
 	html.push(`<div class='server-list-title'>Servers ${options.length ? (`[options: ${options.join(', ')}]`)  : ''}</div>`);
 	html.push(`<ul class='server-list-body'>`);
 	html.push(``);

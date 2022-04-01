@@ -22,7 +22,9 @@ const serverMinSecurityTolerance = 0.01; // We allow a difference of this factor
 const serverMaxMoneyTolerance = 0.01; // We allow a difference of this factor between current and maximum money.
 const hackChanceWarnLevel = 0.9; // Warn if hack chance is below this number (0.9 = 90%)
 
-const primaryHackMoneyFactor = 0.0625; // Hack for this factor of money (0.0625 = 6.25%)
+// Hack for this factor of money (0.0625 = 6.25%). Some people on reddit.com/r/Bitburner have found this to be an optimal number.
+// It seems to work fine: higher numbers take too long to grow back and lower numbers are less profitable.
+const primaryHackMoneyFactor = 0.0625;
 const hackMoneyFactors = [primaryHackMoneyFactor, 0.01, 0.005, 0.001]; // Attempt our primary factor first. If that isn't optimal, fall back to lower values.
 
 const silencedServices = [
@@ -54,6 +56,8 @@ export async function main(ns) {
         ns.tprint(`Usage: ${ns.getScriptName()} [target] ([threads])`);
         return;
     }
+    
+    disableLogs(ns, silencedServices);
 
     const host = ns.getHostname();
     const target = ns.args[0];
@@ -72,8 +76,7 @@ export async function main(ns) {
     let manipulateStock = false;
     let disableToastWarnings = false;
     let loop = false;
-
-    disableLogs(ns, silencedServices);
+    
     ns.log = createLogger(ns, {logToTerminal}); // Bolt our log function onto the ns object.
 
     do {

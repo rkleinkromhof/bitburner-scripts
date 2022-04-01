@@ -5,6 +5,7 @@ import {
 	formatTime,
 } from '/util-formatters.js';
 import {
+	Arrays,
 	seconds,
 	minutes,
 	createLogger,
@@ -28,15 +29,20 @@ const territoryWarfareTask = 'Territory Warfare';
 const taskThresholds = [
 	{ name: trainCombatTask, difficulty: 0, hack: 0, str: 0, def: 0, dex: 0, agi: 0, cha: 0},
 	// { name: 'Human Trafficking', difficulty: 1.0, hack: 0, str: 40, def: 40, dex: 40, agi: 20, cha: 0 }, // hackety-hack
-	{ name: 'Mug People', difficulty: 1.0, hack: 0, str: 40, def: 40, dex: 40, agi: 20, cha: 0 }, // hack: 0, str: 25, def: 25, dex: 25, agi: 10, cha: 15
+	{ name: 'Mug People', difficulty: 1.0, hack: 0, str: 200, def: 200, dex: 200, agi: 200, cha: 0 }, // hack: 0, str: 25, def: 25, dex: 25, agi: 10, cha: 15
 	// { name: 'Deal Drugs', difficulty: 3.5, hack: 0, str: 0, def: 0, dex: 20, agi: 20, cha: 60 }, // hack: 0, str: 0, def: 0, dex: 20, agi: 20, cha: 60
 	// { name: 'Strongarm Civilians', difficulty: 5.0, hack: 10, str: 25, def: 25, dex: 20, agi: 10, cha: 10 }, // hack: 10, str: 25, def: 25, dex: 20, agi: 10, cha: 10
 	// { name: 'Run a Con', difficulty: 14.0, hack: 0, str: 5, def: 5, dex: 25, agi: 25, cha: 40 }, // hack: 0, str: 5, def: 5, dex: 25, agi: 25, cha: 40
 	// { name: 'Armed Robbery', difficulty: 20.0, hack: 20, str: 15, def: 15, dex: 20, agi: 10, cha: 20 }, // hack: 20, str: 15, def: 15, dex: 20, agi: 10, cha: 20
 	// { name: 'Traffick Illegal Arms', difficulty: 32.0, hack: 0, str: 500, def: 500, dex: 500, agi: 0, cha: 0 }, // hack: 15, str: 20, def: 20, dex: 20, agi: 0, cha: 25
 	// { name: 'Threaten & Blackmail', difficulty: 28.0, hack: 25, str: 25, def: 0, dex: 25, agi: 0, cha: 25 }, // hack: 25, str: 25, def: 0, dex: 25, agi: 0, cha: 25
-	{ name: 'Human Trafficking', difficulty: 36.0, hack: 0, str: 500, def: 500, dex: 700, agi: 0, cha: 0 }, // hack: 30, str: 5, def: 5, dex: 30, agi: 0, cha: 30
+	{ name: 'Human Trafficking', difficulty: 36.0, hack: 0, str: 800, def: 800, dex: 800, agi: 0, cha: 0 }, // hack: 30, str: 5, def: 5, dex: 30, agi: 0, cha: 30
 	// { name: 'Terrorism', difficulty: 36.0, hack: 0, str: 1200, def: 1200, dex: 1200, agi: 0, cha: 0} // hack: 20, str: 20, def: 20, dex: 20, agi: 0, cha: 20
+	
+	
+	// { name: trainCombatTask, difficulty: 0, hack: 0, str: 0, def: 0, dex: 0, agi: 0, cha: 0},
+	// { name: vigilanteTask, difficulty: 1.0, hack: 0, str: 400, def: 400, dex: 400, agi: 400, cha: 0 }, // hack: 0, str: 25, def: 25, dex: 25, agi: 10, cha: 15
+	// { name: 'Terrorism', difficulty: 36.0, hack: 0, str: 800, def: 800, dex: 800, agi: 0, cha: 0} // hack: 20, str: 20, def: 20, dex: 20, agi: 0, cha: 20
 ];
 
 const combatStats = ['str', 'def', 'dex', 'agi'];
@@ -54,9 +60,9 @@ const argsSchema = [
 	['error-tolerance', 3], // Tolerate this many errors. The next one ends the loop.
 	['interval', seconds(10)], // Interval between cycles.
 	['max-wanted-penalty', 1], // The maximum percentage of wanted level penalty. When this is exceeded, Members are reassigned to reduce wanted level.
-	['tail', false], // `true` to tail the script.
 	['terminal', false,], // `true` to log to terminal too.
-	['training-only', false] // `true` to only do training tasks. This will still do Territory Warfare.
+	['training-only', false], // `true` to only do training tasks. This will still do Territory Warfare.
+	['vigilante-only', false], // `true` to only do Vigilante Justice. This will still do Territory Warfare.
 ];
 
 /**
@@ -72,9 +78,10 @@ let log;
 const avgOfLoops = 3; // Average out the loop duration over this many loops.
 const pollingInterval = 200; // ms
 const territoryWarfareDuration = 1000; // ms
+const territoryWarfareWinChanceThreshold = 0.8; // Engage in Territory Warface with other gangs when win chance is at or over this level. 
 
 let options;
-let errorTolerance, interval, maxWantedPenalty, trainingOnly;
+let errorTolerance, interval, maxWantedPenalty, trainingOnly, vigilanteOnly;
 
 let vigilanteMode = false;
 const vigilantes = [];
@@ -100,6 +107,7 @@ export async function main(_ns) {
 	errorTolerance = options.errorTolerance;
 	maxWantedPenalty = options['max-wanted-penalty'];
 	trainingOnly = options['training-only'];
+	vigilanteOnly = options['vigilante-only'];
 
 	log = createLogger(ns, {
 		logToTerminal: options.terminal,
@@ -110,6 +118,7 @@ export async function main(_ns) {
     // log(`Recorded loop duration as average over ${avgOfLoops}: ${formatDuration(loopDuration)} (${loopDuration})`);
     const loopDuration = 20000;
 
+	await doCriminalActivities();
     await sleepTillLoopStart();
     await startMainLoop(loopDuration);
 	
@@ -121,16 +130,33 @@ async function startMainLoop(duration) {
 
     do {
         try {
-            let loopStartTime = Date.now();
+			const gangInfo = ns.gang.getGangInformation();
+			const territory = gangInfo.territory;
+			const otherGangInfo = ns.gang.getOtherGangInformation();
+			const otherGangNames = Object.keys(otherGangInfo).filter(gangName => gangName !== gangInfo.faction);
 
-            while ((Date.now() - loopStartTime) < (duration - territoryWarfareDuration)) {
-                await doCriminalActivities();
-                await ns.sleep(pollingInterval);
-            }
+			// If we have a high enough chance to win and not in Territory Warface already, engage in it.
+			if (!gangInfo.territoryWarfareEngaged && otherGangNames.every(gangName => ns.gang.getChanceToWinClash(gangName) > territoryWarfareWinChanceThreshold)) {
+				log.info(`Engaging Territory Warface mode because chances to win clashes are at or above ${formatPercent(territoryWarfareWinChanceThreshold)}`);
+				ns.gang.setTerritoryWarfare(true);
+			}
 
-            strengthenTerritory();
+			// If we're at 100% territory, then other gang form no threat. We can just do our normal activities.
+			if (territory >= 100) {
+				await doCriminalActivities();
+				await ns.sleep(pollingInterval);
+			} else {
+				let loopStartTime = Date.now();
 
-            await sleepTillLoopStart();
+				while ((Date.now() - loopStartTime) < (duration - territoryWarfareDuration)) {
+					await doCriminalActivities();
+					await ns.sleep(pollingInterval);
+				}
+
+				strengthenTerritory();
+
+				await sleepTillLoopStart();
+			}
         } catch (ex) {
             if (ex instanceof TypeError) {
                 throw ex; // These are bugs we should fix immediately, so rethrow to get notified.
@@ -144,7 +170,7 @@ async function startMainLoop(duration) {
 }
 
 function strengthenTerritory() {
-   assignGangMembers(territoryWarfareTask);
+   assignGangMembers(territoryWarfareTask, false);
 }
 
 async function doCriminalActivities() {
@@ -161,9 +187,12 @@ function identifyCriminalsAndVigilantes() {
 	let members = getGangMembers();
 
 	for (const member of members) {
-		if (member.task === vigilanteTask && vigilantes.indexOf(member) < 0) {
-			
-			vigilantes.push(member);
+		if (member.task === vigilanteTask) {
+			Arrays.erase(criminals, member);
+			Arrays.include(vigilantes, member);
+		} else {
+			Arrays.erase(vigilantes, member);
+			Arrays.include(criminals, member);
 		}
 	}
 }
@@ -252,6 +281,8 @@ function shouldAscend(member) {
 }
 
 function getMemberAscMultThreshold(memberStatAscMult) {
+	// This might seem overly complex than just (2 * memberStatAscMult)
+	// but this formula results in a slightly earlier ascention compared to that.
 	return  (2 * memberStatAscMult) - Math.sqrt(0.1 * memberStatAscMult);
 }
 
@@ -273,7 +304,12 @@ async function reassignTasks() {
 			// For now, don't touch Members that are assigned to reduce wanted level.
 			if (reassignment.member.task !== vigilanteTask) {
 				ns.gang.setMemberTask(reassignment.member.name, reassignment.task.name);
-				log(`Assigned ${reassignment.member.name} to ${reassignment.task.name}`);
+
+				// If we're switching tasks, log it, unless it was Territory Warfare, because that ticks every ~20 seconds
+				// and we don't need to log all that.
+				if (reassignment.member.task !== territoryWarfareTask) {
+					log(`Assigned ${reassignment.member.name} to ${reassignment.task.name}`);
+				}
 			}
 			await ns.sleep(100);
 		}
@@ -317,7 +353,10 @@ function getIdealTask(member) {
 	// * => these are the tasks we count as combat tasks
 	if (trainingOnly) {
 		filter = task => task.name === trainCombatTask;
-	} else {
+	} else if (vigilanteOnly) {
+		return {name: vigilanteTask};
+	}
+	else {
 		filter = task => member.hack >= task.hack && member.str >= task.str && member.def >= task.def && member.dex >= task.dex && member.agi >= task.agi && member.cha >= task.cha;
 	}
 	
@@ -381,14 +420,16 @@ function getGangsTotalPower() {
     return power;
 }
 
-function assignGangMembers(task) {
+function assignGangMembers(task, logIt = false) {
     const members = getGangMembers();
 
     for (const member of members) {
         // For now, don't touch Members that are assigned to reduce wanted level.
         if (member.task !== vigilanteTask && member.task !== task) {
             ns.gang.setMemberTask(member.name, task);
-            log(`Assigned ${member.name} to ${task}`);
+			if (logIt) {
+            	log(`Assigned ${member.name} to ${task}`);
+			}
         }
     }
 }

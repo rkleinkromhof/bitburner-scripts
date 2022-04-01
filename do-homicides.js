@@ -56,4 +56,9 @@ export async function main(_ns) {
 		}
 		lastKarmaLevel = karma;
 	}
+
+	if (ns.heart.break() <= wantedKarmaLevel) {
+		// Join a gang and start managing it.
+		ns.exec('gang-manager.js', ns.getHostname(), 1, '--training-only');
+	}
 }

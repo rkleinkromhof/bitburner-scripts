@@ -24,6 +24,7 @@ const silencedServices = [
 
 const argsSchema = [
 	['threads', 10000],
+	['reverse', false], // `true` to reverse the order, targeting low level servers first.
 ];
 
 const hackScript = 'do-hwgw.js';
@@ -52,6 +53,12 @@ export async function main(ns) {
 		.filter(server => !Arrays.contains(alreadyHackingServers, server.hostname));
 
 	if (servers.length) {
+		servers.sort((serverA, serverB) => serverB.moneyMax - serverA.moneyMax); // Servers with more money first.
+
+		if (flagOpts.reverse) {
+			servers.reverse();
+		}
+
 		for (const server of servers) {
 			ns.exec(hackScript, ns.getHostname(), 1, server.hostname, threads);
 			// ns.tprint(`ns.exec(${hackScript}, ${ns.getHostname()}, 1, ${server.hostname}, ${threads});`);
